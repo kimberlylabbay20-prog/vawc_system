@@ -2,7 +2,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
 # Replace with your actual PostgreSQL credentials
-DATABASE_URL = "postgresql://postgres:1234@localhost/vawc_db"
+DATABASE_URL = "postgresql://vawc_db_user:zHFBz1w5mhkXbkJdRLAW2QQvjq2Jt9wF@dpg-d6uct1vdiees73dfdmsg-a.singapore-postgres.render.com/vawc_db"
 
 engine = create_engine(DATABASE_URL)
 

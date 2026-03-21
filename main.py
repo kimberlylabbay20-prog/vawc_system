@@ -1,18 +1,24 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, Request
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
+
 import models, schemas, crud
 from database import engine, SessionLocal, Base
 
-# Auto-create tables
+# Create tables
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="VAWC Reporting System",
-    description="API for submitting and viewing VAWC reports"
+    description="Submit reports under VAWC"
 )
 
-# ✅ CORS FIX (IMPORTANT)
+# Templates (IMPORTANT)
+templates = Jinja2Templates(directory="templates")
+
+# CORS (para walang error sa frontend)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -21,7 +27,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Dependency
+# Database dependency
 def get_db():
     db = SessionLocal()
     try:
@@ -29,13 +35,21 @@ def get_db():
     finally:
         db.close()
 
-# ✅ FIXED: JSON instead of Form
+# ✅ HOMEPAGE (ITO ANG MAGPAPALABAS NG UI)
+@app.get("/", response_class=HTMLResponse)
+def home(request: Request):
+    return templates.TemplateResponse("report.html", {"request": request})
+
+# ✅ SUBMIT REPORT
 @app.post("/submit_report")
 def submit_report(report: schemas.ReportCreate, db: Session = Depends(get_db)):
     new_report = crud.create_report(db, report)
-    return {"message": "Report submitted", "id": new_report.id}
+    return {
+        "message": "Report submitted successfully",
+        "id": new_report.id
+    }
 
-# View reports
+# ✅ VIEW REPORTS
 @app.get("/view_reports")
 def view_reports(db: Session = Depends(get_db)):
     return crud.get_reports(db)

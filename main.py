@@ -38,7 +38,7 @@ def get_db():
 if not os.path.exists("uploads"):
     os.makedirs("uploads")
 
-templates = Jinja2Templates(directory="templates")
+templates = Jinja2Templates(directory=os.path.join(os.path.dirname(__file__), "templates"))
 
 
 # ✅ UPDATED ENDPOINT (WITH FILE UPLOAD)

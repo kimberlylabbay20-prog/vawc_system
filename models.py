@@ -14,3 +14,5 @@ class Report(Base):
     date_reported = Column(TIMESTAMP, server_default=func.now())
     status = Column(String, default="Pending")
     file_path = Column(String, nullable=True)
+
+file_path = Column(String, nullable=True)

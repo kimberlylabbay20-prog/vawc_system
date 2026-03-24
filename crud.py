@@ -10,3 +10,17 @@ def create_report(db: Session, report: schemas.ReportCreate):
 
 def get_reports(db: Session):
     return db.query(models.Report).all()
+
+def create_report_with_file(db, victim_name, contact_number, incident_type, description, location, file_path):
+    new_report = models.Report(
+        victim_name=victim_name,
+        contact_number=contact_number,
+        incident_type=incident_type,
+        description=description,
+        location=location,
+        file_path=file_path
+    )
+    db.add(new_report)
+    db.commit()
+    db.refresh(new_report)
+    return new_report

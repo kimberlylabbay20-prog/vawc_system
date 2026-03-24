@@ -13,3 +13,4 @@ class Report(Base):
     location = Column(Text)
     date_reported = Column(TIMESTAMP, server_default=func.now())
     status = Column(String, default="Pending")
+    file_path = Column(String, nullable=True)

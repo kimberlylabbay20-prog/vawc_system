@@ -42,12 +42,35 @@ def home(request: Request):
 
 # ✅ SUBMIT REPORT
 @app.post("/submit_report")
-def submit_report(report: schemas.ReportCreate, db: Session = Depends(get_db)):
-    new_report = crud.create_report(db, report)
-    return {
-        "message": "Report submitted successfully",
-        "id": new_report.id
-    }
+def submit_report(
+    victim_name: str,
+    contact_number: str,
+    incident_type: str,
+    description: str,
+    location: str,
+    file: UploadFile = File(None),   # ✅ optional file
+    db: Session = Depends(get_db)
+):
+    file_path = None
+
+    if file:
+        os.makedirs("uploads", exist_ok=True)
+        file_path = f"uploads/{file.filename}"
+
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+
+    new_report = crud.create_report(
+        db,
+        victim_name=victim_name,
+        contact_number=contact_number,
+        incident_type=incident_type,
+        description=description,
+        location=location,
+        file_path=file_path   # optional
+    )
+
+    return {"message": "Report submitted", "file": file_path}
 
 # ✅ VIEW REPORTS
 @app.get("/view_reports")

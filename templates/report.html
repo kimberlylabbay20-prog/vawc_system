@@ -169,19 +169,6 @@ document.getElementById("reportForm").addEventListener("submit", async function(
 
     const formData = new FormData();
 
-formData.append("victim_name", document.getElementById("victim_name").value);
-formData.append("contact_number", document.getElementById("contact_number").value);
-formData.append("incident_type", document.getElementById("incident_type").value);
-formData.append("description", document.getElementById("description").value);
-formData.append("location", document.getElementById("location").value);
-
-const fileInput = document.getElementById("file");
-if (fileInput.files.length > 0) {
-    formData.append("file", fileInput.files[0]);
-}
-    try {
-    const formData = new FormData();
-
     formData.append("victim_name", document.getElementById("victim_name").value);
     formData.append("contact_number", document.getElementById("contact_number").value);
     formData.append("incident_type", document.getElementById("incident_type").value);
@@ -193,10 +180,11 @@ if (fileInput.files.length > 0) {
         formData.append("file", fileInput.files[0]);
     }
 
-    const response = await fetch("/submit_report", {
-        method: "POST",
-        body: formData
-    });
+    try {
+        const response = await fetch("/submit_report", {
+            method: "POST",
+            body: formData
+        });
 
         if(response.ok){
             successMsg.style.color = "#b6ffb3";
@@ -207,6 +195,12 @@ if (fileInput.files.length > 0) {
             successMsg.innerText = "❌ Error occurred";
         }
 
+    } catch (error) {
+        successMsg.style.color = "#ffb3b3";
+        successMsg.innerText = "❌ Server not reachable";
+    }
+});
+</script>
     } catch (error) {
         successMsg.style.color = "#ffb3b3";
         successMsg.innerText = "❌ Server not reachable";

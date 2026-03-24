@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>VAWC Reporting System</title>
+
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #2d1b2e;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 420px;
+            margin: 60px auto;
+            background: #4b2a4d;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0px 10px 30px rgba(0,0,0,0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Circles */
+        .circle {
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            border: 2px solid #cbb4c4;
+            border-radius: 50%;
+            top: -30px;
+            right: -30px;
+        }
+
+        .circle2 {
+            position: absolute;
+            width: 90px;
+            height: 90px;
+            border: 2px solid #cbb4c4;
+            border-radius: 50%;
+            top: 20px;
+            right: 40px;
+        }
+
+        h1 {
+            color: #ffffff;
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+
+        h2 {
+            color: #d8c3d8;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        label {
+            color: #f1e4f1;
+            font-size: 13px;
+            margin-top: 12px;
+            display: block;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border-radius: 12px;
+            border: none;
+            background: #8d6b8f;
+            color: white;
+            font-size: 14px;
+        }
+
+        input::placeholder, textarea::placeholder {
+            color: #e0cfe0;
+        }
+
+        textarea {
+            height: 90px;
+            resize: none;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 20px;
+            background: #cbb4c4;
+            color: #3a1f3c;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background: #e2d3df;
+        }
+
+        .success {
+            text-align: center;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        .note {
+            font-size: 12px;
+            color: #d8c3d8;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="circle"></div>
+    <div class="circle2"></div>
+
+    <h1>Barangay VAWC Reporting System</h1>
+    <h2>Report an incident (Mag-report ng insidente)</h2>
+
+    <p class="note">Your report is safe and confidential</p>
+
+    <form id="reportForm">
+
+        <label>Name of victim (Pangalan ng biktima):</label>
+        <input type="text" id="victim_name" required placeholder="Example: Maria Santos">
+
+        <label>Contact Number (Numero ng Telepono):</label>
+        <input type="text" id="contact_number" required placeholder="Example: 09123456789">
+
+        <label>Type of incident (Uri ng insidente):</label>
+        <select id="incident_type" required>
+            <option value="">Select (Pumili)</option>
+            <option>Physical Abuse (Pananakit)</option>
+            <option>Emotional Abuse (Pananakit ng Damdamin)</option>
+            <option>Threat (Pananakot)</option>
+            <option>Other (Iba pa)</option>
+        </select>
+
+        <label>Description (Detalye ng Insidente):</label>
+        <textarea id="description" required placeholder="Example: Sinaktan po ako kagabi sa loob ng bahay..."></textarea>
+
+        <label>Location (Lugar ng pangyayari):</label>
+        <input type="text" id="location" required placeholder="Example: Barangay 5, Manila">
+
+        <label>Attachment (Optional - Proof):</label>
+        <input type="file" id="file">
+
+        <button type="submit">Submit report (I-submit ang report)</button>
+
+        <div class="success" id="successMsg"></div>
+
+    </form>
+
+</div>
+
+<script>
+document.getElementById("reportForm").addEventListener("submit", async function(e){
+    e.preventDefault();
+
+    const successMsg = document.getElementById("successMsg");
+    successMsg.style.color = "white";
+    successMsg.innerText = "Submitting...";
+
+    const formData = new FormData();
+
+    formData.append("victim_name", document.getElementById("victim_name").value);
+    formData.append("contact_number", document.getElementById("contact_number").value);
+    formData.append("incident_type", document.getElementById("incident_type").value);
+    formData.append("description", document.getElementById("description").value);
+    formData.append("location", document.getElementById("location").value);
+
+    const fileInput = document.getElementById("file");
+    if (fileInput.files.length > 0) {
+        formData.append("file", fileInput.files[0]);
+    }
+
+    try {
+        const response = await fetch("/submit_report", {
+            method: "POST",
+            body: formData
+        });
+
+        if(response.ok){
+            successMsg.style.color = "#b6ffb3";
+            successMsg.innerText = "✅ Report submitted successfully!";
+            document.getElementById("reportForm").reset();
+        } else {
+            successMsg.style.color = "#ffb3b3";
+            successMsg.innerText = "❌ Error occurred";
+        }
+
+    } catch (error) {
+        successMsg.style.color = "#ffb3b3";
+        successMsg.innerText = "❌ Server not reachable";
+    }
+});
+</script>
+    } catch (error) {
+        successMsg.style.color = "#ffb3b3";
+        successMsg.innerText = "❌ Server not reachable";
+    }
+});
+</script>
+
+</body>
+</html>

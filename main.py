@@ -1,6 +1,9 @@
 from fastapi import FastAPI, Depends, File, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
+from fastapi import Request
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
 import shutil
 import os
 
@@ -34,6 +37,8 @@ def get_db():
 # 📁 gumawa ng uploads folder kung wala pa
 if not os.path.exists("uploads"):
     os.makedirs("uploads")
+
+templates = Jinja2Templates(directory="templates")
 
 
 # ✅ UPDATED ENDPOINT (WITH FILE UPLOAD)
@@ -76,3 +81,7 @@ def submit_report(
 @app.get("/view_reports")
 def view_reports(db: Session = Depends(get_db)):
     return crud.get_reports(db)
+
+@app.get("/", response_class=HTMLResponse)
+def home(request: Request):
+    return templates.TemplateResponse("report.html", {"request": request})

@@ -2,67 +2,103 @@
 <html>
 <head>
     <title>VAWC Reporting System</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/awareness.css">
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background: linear-gradient(to right, #e3f2fd, #ffffff);
+            font-family: 'Segoe UI', sans-serif;
+            background: #2d1b2e;
             margin: 0;
             padding: 0;
         }
 
         .container {
-            max-width: 500px;
-            margin: 50px auto;
-            background: white;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0px 4px 15px rgba(0,0,0,0.1);
+            max-width: 420px;
+            margin: 60px auto;
+            background: #4b2a4d;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0px 10px 30px rgba(0,0,0,0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Circles */
+        .circle {
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            border: 2px solid #cbb4c4;
+            border-radius: 50%;
+            top: -30px;
+            right: -30px;
+        }
+
+        .circle2 {
+            position: absolute;
+            width: 90px;
+            height: 90px;
+            border: 2px solid #cbb4c4;
+            border-radius: 50%;
+            top: 20px;
+            right: 40px;
         }
 
         h1 {
-            text-align: center;
-            color: #0d47a1;
+            color: #ffffff;
+            font-size: 20px;
+            margin-bottom: 5px;
         }
 
         h2 {
-            text-align: center;
-            color: #1565c0;
+            color: #d8c3d8;
+            font-size: 14px;
+            margin-bottom: 20px;
         }
 
         label {
-            font-weight: bold;
+            color: #f1e4f1;
+            font-size: 13px;
+            margin-top: 12px;
             display: block;
-            margin-top: 10px;
-            color: #333;
         }
 
         input, textarea, select {
             width: 100%;
             padding: 10px;
             margin-top: 5px;
-            border-radius: 8px;
-            border: 1px solid #ccc;
+            border-radius: 12px;
+            border: none;
+            background: #8d6b8f;
+            color: white;
+            font-size: 14px;
+        }
+
+        input::placeholder, textarea::placeholder {
+            color: #e0cfe0;
         }
 
         textarea {
+            height: 90px;
             resize: none;
-            height: 80px;
         }
 
         button {
             width: 100%;
             padding: 12px;
             margin-top: 20px;
-            background: #1976d2;
-            color: white;
+            background: #cbb4c4;
+            color: #3a1f3c;
             border: none;
-            border-radius: 8px;
-            font-size: 17px;
+            border-radius: 12px;
+            font-size: 15px;
             cursor: pointer;
+            transition: 0.3s;
         }
 
         button:hover {
-            background: #0d47a1;
+            background: #e2d3df;
         }
 
         .success {
@@ -72,9 +108,9 @@
         }
 
         .note {
-            font-size: 13px;
-            color: gray;
-            text-align: center;
+            font-size: 12px;
+            color: #d8c3d8;
+            margin-bottom: 10px;
         }
     </style>
 </head>
@@ -83,39 +119,45 @@
 
 <div class="container">
 
-<h1>Barangay VAWC Reporting System</h1>
-<h2>📋 Report an Incident (Mag-report ng Insidente)</h2>
+    <div class="circle"></div>
+    <div class="circle2"></div>
 
-<p class="note">Your report is safe and confidential (Ligtas at kumpidensyal ang iyong ulat)</p>
+    <h1>Barangay VAWC Reporting System</h1>
+    <h2>Report an incident (Mag-report ng insidente)</h2>
 
-<form id="reportForm">
+    <p class="note">Your report is safe and confidential</p>
 
-<label>Victim's Name (Pangalan ng Biktima)</label>
-<input type="text" id="victim_name" required placeholder="Example: Maria Santos">
+    <form id="reportForm">
 
-<label>Contact Number (Numero ng Telepono)</label>
-<input type="text" id="contact_number" required placeholder="09XXXXXXXXX">
+        <label>Name of victim (Pangalan ng biktima):</label>
+        <input type="text" id="victim_name" required placeholder="Example: Maria Santos">
 
-<label>Type of Incident (Uri ng Pangyayari)</label>
-<select id="incident_type" required>
-  <option value="">Select (Pumili)</option>
-  <option>Physical Abuse (Pananakit)</option>
-  <option>Emotional Abuse (Pananakit ng Damdamin)</option>
-  <option>Threat (Pananakot)</option>
-  <option>Other (Iba pa)</option>
-</select>
+        <label>Contact Number (Numero ng Telepono):</label>
+        <input type="text" id="contact_number" required placeholder="Example: 09123456789">
 
-<label>Description (Detalye ng Insidente)</label>
-<textarea id="description" required placeholder="Describe what happened (Ikwento kung ano ang nangyari)"></textarea>
+        <label>Type of incident (Uri ng insidente):</label>
+        <select id="incident_type" required>
+            <option value="">Select (Pumili)</option>
+            <option>Physical Abuse (Pananakit)</option>
+            <option>Emotional Abuse (Pananakit ng Damdamin)</option>
+            <option>Threat (Pananakot)</option>
+            <option>Other (Iba pa)</option>
+        </select>
 
-<label>Location (Lugar ng Pangyayari)</label>
-<input type="text" id="location" required placeholder="Example: Barangay 5">
+        <label>Description (Detalye ng Insidente):</label>
+        <textarea id="description" required placeholder="Example: Sinaktan po ako kagabi sa loob ng bahay..."></textarea>
 
-<button type="submit">📨 Submit Report (I-submit ang Report)</button>
+        <label>Location (Lugar ng pangyayari):</label>
+        <input type="text" id="location" required placeholder="Example: Barangay 5, Manila">
 
-<div class="success" id="successMsg"></div>
+        <label>Attachment (Optional - Proof):</label>
+        <input type="file" id="file">
 
-</form>
+        <button type="submit">Submit report (I-submit ang report)</button>
+
+        <div class="success" id="successMsg"></div>
+
+    </form>
 
 </div>
 
@@ -124,41 +166,232 @@ document.getElementById("reportForm").addEventListener("submit", async function(
     e.preventDefault();
 
     const successMsg = document.getElementById("successMsg");
-    successMsg.style.color = "black";
-    successMsg.innerText = "Submitting... (Ipinapasa ang report...)";
+    successMsg.style.color = "white";
+    successMsg.innerText = "Submitting...";
 
-    const data = {
-        victim_name: document.getElementById("victim_name").value,
-        contact_number: document.getElementById("contact_number").value,
-        incident_type: document.getElementById("incident_type").value,
-        description: document.getElementById("description").value,
-        location: document.getElementById("location").value
-    };
+    const formData = new FormData();
+
+    formData.append("victim_name", document.getElementById("victim_name").value);
+    formData.append("contact_number", document.getElementById("contact_number").value);
+    formData.append("incident_type", document.getElementById("incident_type").value);
+    formData.append("description", document.getElementById("description").value);
+    formData.append("location", document.getElementById("location").value);
+
+    const fileInput = document.getElementById("file");
+    if (fileInput.files.length > 0) {
+        formData.append("file", fileInput.files[0]);
+    }
 
     try {
-        const response = await fetch("/submit_report", {   // ✅ FIXED (no full URL)
+        const response = await fetch("/submit_report", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(data)
+            body: formData
         });
 
         if(response.ok){
-            successMsg.style.color = "green";
-            successMsg.innerText = "✅ Report submitted successfully (Matagumpay na naisumite ang report!)";
+            successMsg.style.color = "#b6ffb3";
+            successMsg.innerText = "✅ Report submitted successfully!";
             document.getElementById("reportForm").reset();
         } else {
-            successMsg.style.color = "red";
-            successMsg.innerText = "❌ Error occurred (May error, pakisubukan ulit)";
+            successMsg.style.color = "#ffb3b3";
+            successMsg.innerText = "❌ Error occurred";
         }
 
     } catch (error) {
-        successMsg.style.color = "red";
-        successMsg.innerText = "❌ Server not reachable (Hindi maabot ang server)";
+        successMsg.style.color = "#ffb3b3";
+        successMsg.innerText = "❌ Server not reachable";
+    }
+});
+</script>
+    } catch (error) {
+        successMsg.style.color = "#ffb3b3";
+        successMsg.innerText = "❌ Server not reachable";
     }
 });
 </script>
 
+<!-- ============ VAWC AWARENESS FLOATING BUTTON ============ -->
+<div class="awareness-fab" id="awarenessFab" role="button" tabindex="0" aria-label="Know Your Rights">
+  <div class="fab-button">
+    <i class="fas fa-scale-balanced"></i>
+    <div class="fab-pulse-ring"></div>
+    <div class="fab-pulse-ring"></div>
+  </div>
+  <div class="fab-label">
+    <span class="fab-title">Know Your Rights</span>
+    <span class="fab-subtitle">Learn about VAWC laws &amp; protection</span>
+  </div>
+</div>
+
+<!-- ============ AWARENESS MODAL ============ -->
+<div class="awareness-overlay" id="awarenessOverlay">
+  <div class="awareness-modal">
+    <button class="awareness-close" id="awarenessClose" aria-label="Close">&times;</button>
+    <div class="awareness-content">
+
+      <!-- Header -->
+      <div class="awareness-header">
+        <div class="header-icon"><i class="fas fa-scale-balanced"></i></div>
+        <h2>Know Your Rights</h2>
+        <p>Learn about VAWC laws, your rights as a woman, and where to find help and protection.</p>
+      </div>
+
+      <!-- SECTION A: What is VAWC -->
+      <section class="awareness-section">
+        <h3><i class="fas fa-info-circle"></i> What is VAWC?</h3>
+        <div class="section-intro">
+          <strong>Violence Against Women and Children (VAWC)</strong> refers to any act of gender-based violence that results in physical, sexual, psychological, or economic harm or suffering to women and children. This includes threats, coercion, harassment, and arbitrary deprivation of liberty — whether in public or in private life.<br><br>
+          <strong>You are not alone.</strong> Help is available, and you have the right to live free from violence and fear. There are laws that protect you, people who will listen, and institutions ready to help.
+        </div>
+      </section>
+
+      <!-- SECTION B: Women's Rights -->
+      <section class="awareness-section">
+        <h3><i class="fas fa-shield-halved"></i> Your Rights as a Woman</h3>
+        <div class="rights-grid">
+          <div class="right-card">
+            <div class="card-icon"><i class="fas fa-shield-halved"></i></div>
+            <div class="card-title">Right to Protection</div>
+            <div class="card-desc">Every woman has the right to be protected from all forms of violence and discrimination. The State is duty-bound to ensure your safety and well-being.</div>
+          </div>
+          <div class="right-card">
+            <div class="card-icon"><i class="fas fa-pen-to-square"></i></div>
+            <div class="card-title">Right to Report Abuse</div>
+            <div class="card-desc">You have the right to report any incident of abuse to your barangay, the PNP, or DSWD without fear of retaliation or judgment.</div>
+          </div>
+          <div class="right-card">
+            <div class="card-icon"><i class="fas fa-scale-balanced"></i></div>
+            <div class="card-title">Right to Legal Assistance</div>
+            <div class="card-desc">Free legal assistance is available through the Public Attorney's Office (PAO) and accredited non-government organizations.</div>
+          </div>
+          <div class="right-card">
+            <div class="card-icon"><i class="fas fa-heart-pulse"></i></div>
+            <div class="card-title">Right to Medical Support</div>
+            <div class="card-desc">You are entitled to immediate medical treatment, examination, and counseling at any government hospital or health center.</div>
+          </div>
+          <div class="right-card">
+            <div class="card-icon"><i class="fas fa-lock"></i></div>
+            <div class="card-title">Right to Privacy &amp; Confidentiality</div>
+            <div class="card-desc">Your identity and the details of your case shall be kept confidential throughout the legal and investigation process.</div>
+          </div>
+          <div class="right-card">
+            <div class="card-icon"><i class="fas fa-house-chimney"></i></div>
+            <div class="card-title">Right to Shelter &amp; Safety</div>
+            <div class="card-desc">Temporary shelter, protection, and psychosocial support are available through DSWD, local government units, and women's shelters.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION C: Philippine VAWC Laws -->
+      <section class="awareness-section">
+        <h3><i class="fas fa-book"></i> Philippine VAWC Laws</h3>
+        <div class="laws-grid">
+          <div class="law-card">
+            <div class="law-icon"><i class="fas fa-gavel"></i></div>
+            <div class="law-title">RA 9262</div>
+            <div class="law-sub">Anti-Violence Against Women and Their Children Act of 2004</div>
+            <div class="law-desc">Protects women and their children from physical, sexual, psychological, and economic abuse. Provides for Barangay Protection Orders (BPO), Temporary Protection Orders (TPO), and Permanent Protection Orders (PPO).</div>
+            <button class="learn-more-btn"><i class="fas fa-chevron-down"></i> Learn More</button>
+            <div class="law-details">
+              <p>RA 9262 criminalizes acts of violence committed by a husband, partner, or any person with whom the woman has or had a marital, dating, or sexual relationship. Penalties range from arresto mayor to reclusion perpetua depending on the severity of the offense. Victims may apply for protection orders at the barangay or court level at no cost.</p>
+            </div>
+          </div>
+          <div class="law-card">
+            <div class="law-icon"><i class="fas fa-gavel"></i></div>
+            <div class="law-title">RA 8353</div>
+            <div class="law-sub">The Anti-Rape Law of 1997</div>
+            <div class="law-desc">Reclassifies rape as a crime against persons. Defines and penalizes rape and sexual assault, including marital rape. Provides protective measures for survivors during legal proceedings.</div>
+            <button class="learn-more-btn"><i class="fas fa-chevron-down"></i> Learn More</button>
+            <div class="law-details">
+              <p>RA 8353 expanded the definition of rape to include both men and women as possible victims, and recognized marital rape as a criminal offense. The law also allows for in-camera proceedings to protect the privacy of the survivor and prohibits the publication of the survivor's identity without consent.</p>
+            </div>
+          </div>
+          <div class="law-card">
+            <div class="law-icon"><i class="fas fa-gavel"></i></div>
+            <div class="law-title">RA 7877</div>
+            <div class="law-sub">Anti-Sexual Harassment Act of 1995</div>
+            <div class="law-desc">Prohibits sexual harassment in employment, education, and training environments. Requires employers and institutions to create and implement policies against sexual harassment.</div>
+            <button class="learn-more-btn"><i class="fas fa-chevron-down"></i> Learn More</button>
+            <div class="law-details">
+              <p>RA 7877 defines sexual harassment as any unwelcome sexual advance, request for sexual favor, or other verbal or physical conduct of a sexual nature made by a person who has authority, influence, or moral ascendancy over another in a work or educational setting. Employers who fail to take action may be held liable.</p>
+            </div>
+          </div>
+          <div class="law-card">
+            <div class="law-icon"><i class="fas fa-gavel"></i></div>
+            <div class="law-title">RA 11313</div>
+            <div class="law-sub">Safe Spaces Act (Bawal Bastos Law)</div>
+            <div class="law-desc">Prohibits gender-based sexual harassment in public spaces, online, and in workplaces. Covers catcalling, unwanted remarks, stalking, and all forms of public harassment.</div>
+            <button class="learn-more-btn"><i class="fas fa-chevron-down"></i> Learn More</button>
+            <div class="law-details">
+              <p>RA 11313 or the Safe Spaces Act expands the scope of prohibited acts to include gender-based harassment committed in streets, public transportation, parks, online platforms, and workplaces. It penalizes misogynistic, homophobic, and transphobic remarks. Barangay officials are required to disseminate information and assist victims.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION D: Emergency Help -->
+      <section class="awareness-section emergency-section">
+        <h3><i class="fas fa-circle-exclamation"></i> Emergency Help &amp; Contacts</h3>
+        <div class="emergency-grid">
+          <div class="emergency-card">
+            <div class="emergency-icon">
+              <i class="fas fa-building"></i>
+              <span class="alert-pulse"></span>
+            </div>
+            <div class="emergency-info">
+              <div class="emergency-name">Barangay VAWC Office</div>
+              <div class="emergency-desc">Your local barangay hall — report incidents and apply for a Barangay Protection Order (BPO)</div>
+              <span class="emergency-contact"><i class="fas fa-location-dot"></i> Visit your barangay hall</span>
+            </div>
+          </div>
+          <div class="emergency-card">
+            <div class="emergency-icon">
+              <i class="fas fa-shield"></i>
+              <span class="alert-pulse"></span>
+            </div>
+            <div class="emergency-info">
+              <div class="emergency-name">PNP WCPD</div>
+              <div class="emergency-desc">Women and Children Protection Desk — 24/7 assistance for VAWC cases</div>
+              <span class="emergency-contact"><i class="fas fa-phone"></i> 0919-777-7377</span>
+            </div>
+          </div>
+          <div class="emergency-card">
+            <div class="emergency-icon">
+              <i class="fas fa-hand-holding-heart"></i>
+              <span class="alert-pulse"></span>
+            </div>
+            <div class="emergency-info">
+              <div class="emergency-name">DSWD</div>
+              <div class="emergency-desc">Department of Social Welfare and Development — crisis intervention, shelter, and counseling</div>
+              <span class="emergency-contact"><i class="fas fa-phone"></i> (02) 8931-8101</span>
+            </div>
+          </div>
+          <div class="emergency-card">
+            <div class="emergency-icon">
+              <i class="fas fa-phone-volume"></i>
+              <span class="alert-pulse"></span>
+            </div>
+            <div class="emergency-info">
+              <div class="emergency-name">National Emergency Hotline</div>
+              <div class="emergency-desc">For life-threatening emergencies requiring immediate police or medical response</div>
+              <span class="emergency-contact"><i class="fas fa-phone"></i> 911 or 8888</span>
+            </div>
+          </div>
+        </div>
+        <div class="emergency-note">
+          <i class="fas fa-triangle-exclamation"></i> If you are in immediate danger, <strong>call 911</strong> or go to your nearest barangay hall or police station. You do not need to face this alone.
+        </div>
+      </section>
+
+      <!-- Footer -->
+      <div class="awareness-footer">
+        <p><i class="fas fa-heart" style="color:#cbb4c4"></i> You are valued, you are protected, and you have rights. <i class="fas fa-heart" style="color:#cbb4c4"></i></p>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="/static/awareness.js"></script>
 </body>
 </html>

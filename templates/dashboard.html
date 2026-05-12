@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Barangay VAWC Case Management System</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f0f2f5; color: #2c3e50; }
+:root {
+  --primary: #1a3a5c; --primary-light: #2c5f8a; --accent: #3498db;
+  --success: #27ae60; --warning: #f39c12; --danger: #e74c3c;
+  --bg: #f0f2f5; --card: #fff; --text: #2c3e50; --text-light: #7f8c8d;
+  --border: #e0e4e8; --sidebar-w: 250px; --header-h: 60px;
+}
+
+/* ---- LOGIN PAGE ---- */
+.login-page {
+  min-height: 100vh; display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, #1a3a5c 0%, #2c5f8a 50%, #3498db 100%);
+  padding: 20px;
+}
+.login-box {
+  background: #fff; border-radius: 16px; padding: 40px; width: 100%; max-width: 420px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+.login-box .logo { text-align: center; margin-bottom: 8px; }
+.login-box .logo i { font-size: 48px; color: var(--primary); }
+.login-box h1 { text-align: center; font-size: 22px; color: var(--primary); margin-bottom: 4px; }
+.login-box p { text-align: center; color: var(--text-light); font-size: 14px; margin-bottom: 24px; }
+.form-group { margin-bottom: 16px; }
+.form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 4px; color: var(--text); }
+.form-group input, .form-group select, .form-group textarea {
+  width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px;
+  font-size: 14px; transition: border 0.2s;
+}
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+  outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(52,152,219,0.15);
+}
+.btn {
+  padding: 10px 20px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px;
+}
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-primary:hover { background: var(--primary-light); }
+.btn-accent { background: var(--accent); color: #fff; }
+.btn-accent:hover { background: #2980b9; }
+.btn-success { background: var(--success); color: #fff; }
+.btn-success:hover { background: #219a52; }
+.btn-danger { background: var(--danger); color: #fff; }
+.btn-danger:hover { background: #c0392b; }
+.btn-outline { background: transparent; color: var(--text); border: 1px solid var(--border); }
+.btn-outline:hover { background: #f5f6f8; }
+.btn-sm { padding: 6px 12px; font-size: 12px; }
+.btn-block { width: 100%; display: block; }
+.auth-toggle { text-align: center; margin-top: 16px; font-size: 14px; color: var(--text-light); }
+.auth-toggle a { color: var(--accent); cursor: pointer; text-decoration: none; font-weight: 600; }
+.error-msg { color: var(--danger); font-size: 13px; text-align: center; margin: 8px 0; display: none; }
+
+/* ---- MAIN APP LAYOUT ---- */
+.app-container { display: none; min-height: 100vh; }
+.app-container.active { display: flex; }
+
+/* Sidebar */
+.sidebar {
+  width: var(--sidebar-w); background: var(--primary); color: #fff;
+  display: flex; flex-direction: column; position: fixed; top: 0; left: 0;
+  height: 100vh; z-index: 100; transition: transform 0.3s;
+}
+.sidebar-header {
+  padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.1);
+  display: flex; align-items: center; gap: 10px;
+}
+.sidebar-header i { font-size: 28px; }
+.sidebar-header h2 { font-size: 15px; font-weight: 600; line-height: 1.3; }
+.sidebar-header small { font-size: 11px; opacity: 0.7; display: block; }
+.sidebar-nav { flex: 1; padding: 12px 0; overflow-y: auto; }
+.nav-item {
+  display: flex; align-items: center; gap: 12px; padding: 12px 20px;
+  cursor: pointer; transition: all 0.2s; font-size: 14px; color: rgba(255,255,255,0.7);
+  border-left: 3px solid transparent;
+}
+.nav-item:hover { background: rgba(255,255,255,0.08); color: #fff; }
+.nav-item.active { background: rgba(255,255,255,0.12); color: #fff; border-left-color: var(--accent); }
+.nav-item i { width: 20px; text-align: center; }
+.sidebar-footer {
+  padding: 16px 20px; border-top: 1px solid rgba(255,255,255,0.1);
+  display: flex; align-items: center; gap: 10px;
+}
+.sidebar-footer .user-avatar {
+  width: 36px; height: 36px; border-radius: 50%; background: var(--accent);
+  display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px;
+}
+.sidebar-footer .user-info { flex: 1; }
+.sidebar-footer .user-info div { font-size: 13px; font-weight: 600; }
+.sidebar-footer .user-info small { font-size: 11px; opacity: 0.7; }
+.sidebar-footer .logout-btn { cursor: pointer; opacity: 0.7; }
+.sidebar-footer .logout-btn:hover { opacity: 1; }
+
+/* Main Content */
+.main-content { margin-left: var(--sidebar-w); flex: 1; min-height: 100vh; }
+.topbar {
+  height: var(--header-h); background: #fff; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 24px; position: sticky; top: 0; z-index: 50;
+}
+.topbar-left { display: flex; align-items: center; gap: 16px; }
+.topbar-left h3 { font-size: 18px; font-weight: 600; }
+.menu-toggle { display: none; background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text); }
+.topbar-right { display: flex; align-items: center; gap: 16px; }
+.notif-btn {
+  position: relative; background: none; border: none; font-size: 18px; cursor: pointer; color: var(--text-light);
+  width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+}
+.notif-btn:hover { background: #f0f2f5; }
+.notif-badge {
+  position: absolute; top: 2px; right: 2px; background: var(--danger); color: #fff;
+  font-size: 10px; width: 18px; height: 18px; border-radius: 50%; display: flex;
+  align-items: center; justify-content: center; font-weight: 700;
+}
+.content-area { padding: 24px; }
+
+/* ---- PAGE SECTIONS ---- */
+.page-section { display: none; }
+.page-section.active { display: block; }
+
+/* ---- DASHBOARD CARDS ---- */
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px; }
+.stat-card {
+  background: var(--card); border-radius: 12px; padding: 20px; display: flex;
+  align-items: center; gap: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.stat-card .stat-icon {
+  width: 52px; height: 52px; border-radius: 12px; display: flex;
+  align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0;
+}
+.stat-card .stat-info h4 { font-size: 24px; font-weight: 700; }
+.stat-card .stat-info p { font-size: 13px; color: var(--text-light); }
+.stat-icon.blue { background: #e8f4fd; color: var(--accent); }
+.stat-icon.green { background: #e8f8f0; color: var(--success); }
+.stat-icon.red { background: #fde8e8; color: var(--danger); }
+.stat-icon.orange { background: #fef3e2; color: var(--warning); }
+.stat-icon.purple { background: #f0e8fd; color: #8e44ad; }
+.stat-icon.teal { background: #e8f8f5; color: #1abc9c; }
+
+/* Dashboard grid */
+.dashboard-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; }
+.chart-card {
+  background: var(--card); border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.chart-card h3 { font-size: 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+.activity-feed .activity-item {
+  display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid #f0f2f5;
+}
+.activity-feed .activity-item:last-child { border-bottom: none; }
+.activity-dot {
+  width: 10px; height: 10px; border-radius: 50%; margin-top: 5px; flex-shrink: 0;
+}
+.activity-dot.blue { background: var(--accent); }
+.activity-dot.green { background: var(--success); }
+.activity-dot.red { background: var(--danger); }
+.activity-dot.orange { background: var(--warning); }
+.activity-content { flex: 1; }
+.activity-content p { font-size: 13px; }
+.activity-content small { font-size: 11px; color: var(--text-light); }
+
+/* ---- CASES TABLE ---- */
+.toolbar {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 12px; margin-bottom: 16px;
+}
+.toolbar-left { display: flex; gap: 8px; flex-wrap: wrap; }
+.toolbar-left input, .toolbar-left select {
+  padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px;
+  font-size: 13px; background: #fff;
+}
+.toolbar-left input:focus, .toolbar-left select:focus {
+  outline: none; border-color: var(--accent);
+}
+.table-wrap { overflow-x: auto; }
+table {
+  width: 100%; background: var(--card); border-radius: 12px; overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06); border-collapse: collapse;
+}
+thead { background: #f8f9fa; }
+th { padding: 12px 16px; text-align: left; font-size: 12px; font-weight: 600; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.5px; }
+td { padding: 12px 16px; font-size: 14px; border-top: 1px solid #f0f2f5; }
+tr:hover td { background: #f8f9fa; }
+tr.clickable { cursor: pointer; }
+
+.badge {
+  display: inline-block; padding: 3px 10px; border-radius: 20px;
+  font-size: 12px; font-weight: 600;
+}
+.badge-red { background: #fde8e8; color: var(--danger); }
+.badge-orange { background: #fef3e2; color: var(--warning); }
+.badge-green { background: #e8f8f0; color: var(--success); }
+.badge-blue { background: #e8f4fd; color: var(--accent); }
+.badge-gray { background: #f0f2f5; color: var(--text-light); }
+
+.priority-indicator {
+  display: inline-flex; align-items: center; gap: 4px;
+}
+.priority-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.priority-dot.high { background: var(--danger); }
+.priority-dot.medium { background: var(--warning); }
+.priority-dot.low { background: var(--success); }
+
+/* ---- CASE DETAIL ---- */
+.case-detail-header {
+  display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+  margin-bottom: 24px;
+}
+.case-detail-header h2 { font-size: 22px; }
+.case-detail-header .case-meta { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+.case-detail-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; }
+.detail-card {
+  background: var(--card); border-radius: 12px; padding: 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06); margin-bottom: 16px;
+}
+.detail-card h3 { font-size: 15px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+.detail-row { display: flex; padding: 8px 0; border-bottom: 1px solid #f0f2f5; }
+.detail-row:last-child { border-bottom: none; }
+.detail-label { width: 140px; font-size: 13px; color: var(--text-light); flex-shrink: 0; }
+.detail-value { flex: 1; font-size: 14px; font-weight: 500; }
+
+.timeline { position: relative; padding-left: 24px; }
+.timeline::before {
+  content: ''; position: absolute; left: 8px; top: 0; bottom: 0;
+  width: 2px; background: var(--border);
+}
+.timeline-item { position: relative; padding: 0 0 20px 16px; }
+.timeline-item::before {
+  content: ''; position: absolute; left: -20px; top: 6px;
+  width: 12px; height: 12px; border-radius: 50%; background: var(--accent);
+  border: 2px solid #fff; box-shadow: 0 0 0 2px var(--accent);
+}
+.timeline-item .time { font-size: 11px; color: var(--text-light); }
+.timeline-item p { font-size: 14px; margin-top: 2px; }
+
+.action-btns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+
+/* ---- MODAL ---- */
+.modal-overlay {
+  display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+  z-index: 1000; align-items: center; justify-content: center;
+}
+.modal-overlay.active { display: flex; }
+.modal {
+  background: #fff; border-radius: 16px; padding: 28px; width: 90%; max-width: 500px;
+  max-height: 80vh; overflow-y: auto;
+}
+.modal h3 { font-size: 18px; margin-bottom: 16px; }
+.modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
+
+/* ---- REPORTS PAGE ---- */
+.reports-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+.chart-placeholder {
+  background: var(--card); border-radius: 12px; padding: 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.chart-placeholder h4 { font-size: 14px; margin-bottom: 12px; color: var(--text-light); }
+.bar-chart { display: flex; align-items: flex-end; gap: 8px; height: 120px; padding-top: 8px; }
+.bar { flex: 1; border-radius: 4px 4px 0 0; min-height: 4px; transition: height 0.3s; position: relative; }
+.bar:hover { opacity: 0.8; }
+.bar-label { text-align: center; font-size: 11px; color: var(--text-light); margin-top: 6px; }
+
+/* ---- RESPONSIVE ---- */
+@media (max-width: 768px) {
+  .sidebar { transform: translateX(-100%); }
+  .sidebar.open { transform: translateX(0); }
+  .menu-toggle { display: block; }
+  .main-content { margin-left: 0; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .dashboard-grid, .case-detail-grid, .reports-grid { grid-template-columns: 1fr; }
+}
+.loading { text-align: center; padding: 40px; color: var(--text-light); }
+.loading i { font-size: 32px; margin-bottom: 8px; }
+</style>
+</head>
+<body>
+
+<!-- ============ LOGIN PAGE ============ -->
+<div class="login-page" id="loginPage">
+  <div class="login-box">
+    <div class="logo"><i class="fas fa-balance-scale"></i></div>
+    <h1>Barangay VAWC</h1>
+    <p>Case Management System</p>
+
+    <div id="loginForm">
+      <div class="error-msg" id="loginError"></div>
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" id="loginUsername" placeholder="Enter username">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="loginPassword" placeholder="Enter password">
+      </div>
+      <button class="btn btn-primary btn-block" onclick="handleLogin()"><i class="fas fa-sign-in-alt"></i> Sign In</button>
+      <div class="auth-toggle">No account? <a onclick="showRegister()">Register here</a></div>
+    </div>
+
+    <div id="registerForm" style="display:none">
+      <div class="error-msg" id="registerError"></div>
+      <div class="form-group">
+        <label>Full Name</label>
+        <input type="text" id="regFullName" placeholder="e.g. Juan Dela Cruz">
+      </div>
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" id="regUsername" placeholder="Choose a username">
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="regEmail" placeholder="email@example.com">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="regPassword" placeholder="Create a password">
+      </div>
+      <div class="form-group">
+        <label>Role</label>
+        <select id="regRole"><option value="officer">Barangay Officer</option><option value="admin">Admin</option></select>
+      </div>
+      <div class="form-group">
+        <label>Barangay</label>
+        <input type="text" id="regBarangay" placeholder="e.g. Barangay 5">
+      </div>
+      <div class="form-group">
+        <label>Contact Number</label>
+        <input type="text" id="regContact" placeholder="09123456789">
+      </div>
+      <button class="btn btn-accent btn-block" onclick="handleRegister()"><i class="fas fa-user-plus"></i> Register</button>
+      <div class="auth-toggle">Already have an account? <a onclick="showLogin()">Sign in</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MAIN APP ============ -->
+<div class="app-container" id="appContainer">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <i class="fas fa-balance-scale"></i>
+      <div><h2>VAWC System</h2><small>Case Management</small></div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-item active" onclick="switchView('dashboard',this)"><i class="fas fa-chart-pie"></i> Dashboard</div>
+      <div class="nav-item" onclick="switchView('cases',this)"><i class="fas fa-folder-open"></i> Cases</div>
+      <div class="nav-item" onclick="switchView('reports',this)"><i class="fas fa-file-alt"></i> Reports</div>
+      <div class="nav-item" onclick="switchView('users',this)"><i class="fas fa-users"></i> Officers</div>
+      <div class="nav-item" onclick="window.open('/report','_blank')"><i class="fas fa-plus-circle"></i> New Report</div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-avatar" id="userAvatar">JD</div>
+      <div class="user-info">
+        <div id="userName">User</div>
+        <small id="userRole">Officer</small>
+      </div>
+      <i class="fas fa-sign-out-alt logout-btn" onclick="handleLogout()"></i>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main-content">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="menu-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+        <h3 id="pageTitle">Dashboard</h3>
+      </div>
+      <div class="topbar-right">
+        <button class="notif-btn" onclick="toggleNotifications()">
+          <i class="fas fa-bell"></i>
+          <span class="notif-badge" id="notifBadge" style="display:none">0</span>
+        </button>
+        <span id="currentUserLabel" style="font-size:14px;font-weight:500;color:var(--text)"></span>
+      </div>
+    </header>
+
+    <div class="content-area">
+
+      <!-- ====== DASHBOARD VIEW ====== -->
+      <div class="page-section active" id="viewDashboard">
+        <div class="stats-grid" id="statsGrid"></div>
+        <div class="dashboard-grid">
+          <div class="chart-card">
+            <h3><i class="fas fa-calendar-alt" style="color:var(--accent)"></i> Monthly Cases</h3>
+            <div id="monthlyChart" class="bar-chart" style="height:160px;align-items:flex-end"></div>
+          </div>
+          <div class="chart-card">
+            <h3><i class="fas fa-clock" style="color:var(--warning)"></i> Recent Activity</h3>
+            <div class="activity-feed" id="activityFeed"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ====== CASES VIEW ====== -->
+      <div class="page-section" id="viewCases">
+        <div class="toolbar">
+          <div class="toolbar-left">
+            <input type="text" id="caseSearch" placeholder="Search cases..." oninput="renderCases()">
+            <select id="filterStatus" onchange="renderCases()">
+              <option value="">All Status</option>
+              <option value="Submitted">Submitted</option>
+              <option value="Assigned">Assigned</option>
+              <option value="Ongoing">Ongoing</option>
+              <option value="Monitoring">Monitoring</option>
+              <option value="Resolved">Resolved</option>
+              <option value="Archived">Archived</option>
+            </select>
+            <select id="filterPriority" onchange="renderCases()">
+              <option value="">All Priority</option>
+              <option value="HIGH">HIGH</option>
+              <option value="MEDIUM">MEDIUM</option>
+              <option value="LOW">LOW</option>
+            </select>
+          </div>
+          <button class="btn btn-accent btn-sm" onclick="window.open('/report','_blank')">
+            <i class="fas fa-plus"></i> New Case
+          </button>
+        </div>
+        <div class="table-wrap">
+          <table><thead><tr>
+            <th>Case ID</th><th>Victim</th><th>Incident</th><th>Priority</th><th>Status</th><th>Assigned To</th><th>Date</th>
+          </tr></thead><tbody id="casesTableBody"></tbody></table>
+        </div>
+      </div>
+
+      <!-- ====== CASE DETAIL ====== -->
+      <div class="page-section" id="viewCaseDetail">
+        <button class="btn btn-outline btn-sm" onclick="switchView('cases')" style="margin-bottom:12px">
+          <i class="fas fa-arrow-left"></i> Back to Cases
+        </button>
+        <div id="caseDetailContent"></div>
+      </div>
+
+      <!-- ====== REPORTS VIEW ====== -->
+      <div class="page-section" id="viewReports">
+        <div class="stats-grid" id="reportStatsGrid"></div>
+        <div class="reports-grid">
+          <div class="chart-placeholder">
+            <h4><i class="fas fa-chart-bar" style="color:var(--accent)"></i> Priority Distribution</h4>
+            <div id="priorityChart" class="bar-chart" style="height:140px;align-items:flex-end"></div>
+          </div>
+          <div class="chart-placeholder">
+            <h4><i class="fas fa-check-circle" style="color:var(--success)"></i> Status Distribution</h4>
+            <div id="statusChart" class="bar-chart" style="height:140px;align-items:flex-end"></div>
+          </div>
+        </div>
+        <div class="chart-placeholder">
+          <h4><i class="fas fa-users" style="color:var(--primary)"></i> Officer Workload</h4>
+          <div class="table-wrap"><table><thead><tr>
+            <th>Officer</th><th>Assigned</th><th>Active</th><th>Resolved</th>
+          </tr></thead><tbody id="workloadBody"></tbody></table></div>
+        </div>
+      </div>
+
+      <!-- ====== USERS VIEW ====== -->
+      <div class="page-section" id="viewUsers">
+        <div class="toolbar">
+          <h3 style="font-size:18px"><i class="fas fa-users" style="color:var(--primary)"></i> Registered Officers</h3>
+        </div>
+        <div class="table-wrap">
+          <table><thead><tr>
+            <th>Name</th><th>Username</th><th>Email</th><th>Role</th><th>Barangay</th><th>Contact</th><th>Status</th><th>Registered</th>
+          </tr></thead><tbody id="usersTableBody"></tbody></table>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- ============ NOTIFICATION PANEL ============ -->
+<div class="modal-overlay" id="notifModal">
+  <div class="modal">
+    <h3><i class="fas fa-bell" style="color:var(--accent)"></i> Notifications</h3>
+    <div id="notifList"></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline btn-sm" onclick="closeModal('notifModal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ ACTION MODAL ============ -->
+<div class="modal-overlay" id="actionModal">
+  <div class="modal">
+    <h3 id="actionModalTitle">Action</h3>
+    <div id="actionModalBody"></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline btn-sm" onclick="closeModal('actionModal')">Cancel</button>
+      <button class="btn btn-primary btn-sm" id="actionModalConfirm" onclick="confirmAction()">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============ STATE ============
+let TOKEN = localStorage.getItem('vawc_token') || '';
+let CURRENT_USER = null;
+let CASES = [];
+let USERS = [];
+let NOTIFICATIONS = [];
+let CURRENT_VIEW = 'dashboard';
+let SELECTED_CASE_ID = null;
+let PENDING_ACTION = null;
+
+// ============ AUTH ============
+function showRegister() { document.getElementById('loginForm').style.display='none'; document.getElementById('registerForm').style.display='block'; }
+function showLogin() { document.getElementById('loginForm').style.display='block'; document.getElementById('registerForm').style.display='none'; }
+function showError(id, msg) { const el=document.getElementById(id); el.textContent=msg; el.style.display='block'; setTimeout(()=>el.style.display='none',4000); }
+
+async function handleLogin() {
+  const u=document.getElementById('loginUsername').value;
+  const p=document.getElementById('loginPassword').value;
+  if(!u||!p) return showError('loginError','Please fill in all fields');
+  try {
+    const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p})});
+    const d=await r.json();
+    if(!r.ok) return showError('loginError',d.detail||'Login failed');
+    TOKEN=d.access_token; localStorage.setItem('vawc_token',TOKEN);
+    CURRENT_USER=d.user;
+    if(['admin','officer'].includes(d.user.role)) {
+      initApp();
+    } else {
+      localStorage.removeItem('vawc_token');
+      window.location.href='/';
+    }
+  } catch(e) { showError('loginError','Server not reachable'); }
+}
+
+async function handleRegister() {
+  const data={username:document.getElementById('regUsername').value,email:document.getElementById('regEmail').value,
+    password:document.getElementById('regPassword').value,full_name:document.getElementById('regFullName').value,
+    role:document.getElementById('regRole').value,barangay:document.getElementById('regBarangay').value,
+    contact_number:document.getElementById('regContact').value};
+  for(const k of['username','email','password','full_name']) { if(!data[k]) return showError('registerError','Please fill in all required fields'); }
+  try {
+    const r=await fetch('/api/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+    const d=await r.json();
+    if(!r.ok) return showError('registerError',d.detail||'Registration failed');
+    TOKEN=d.access_token; localStorage.setItem('vawc_token',TOKEN);
+    CURRENT_USER=d.user;
+    if(['admin','officer'].includes(d.user.role)) {
+      initApp();
+    } else {
+      localStorage.removeItem('vawc_token');
+      window.location.href='/';
+    }
+  } catch(e) { showError('registerError','Server not reachable'); }
+}
+
+async function fetchWithAuth(url,options={}) {
+  options.headers={...options.headers,'Authorization':`Bearer ${TOKEN}`,'Accept':'application/json'};
+  if(options.body && typeof options.body==='object' && !(options.body instanceof FormData)) {
+    options.headers['Content-Type']='application/json';
+    options.body=JSON.stringify(options.body);
+  }
+  const r=await fetch(url,options);
+  if(r.status===401) { handleLogout(); throw new Error('Unauthorized'); }
+  return r;
+}
+
+function handleLogout() { TOKEN=''; localStorage.removeItem('vawc_token'); CURRENT_USER=null;
+  document.getElementById('appContainer').classList.remove('active');
+  document.getElementById('loginPage').style.display='flex'; }
+
+// ============ INIT ============
+async function initApp() {
+  document.getElementById('loginPage').style.display='none';
+  document.getElementById('appContainer').classList.add('active');
+  if(CURRENT_USER) {
+    const name=CURRENT_USER.full_name||CURRENT_USER.username;
+    document.getElementById('userName').textContent=name;
+    document.getElementById('userRole').textContent=CURRENT_USER.role;
+    document.getElementById('currentUserLabel').textContent=name;
+    const initials=name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    document.getElementById('userAvatar').textContent=initials;
+  }
+  await loadAllData();
+}
+
+async function loadAllData() {
+  try {
+    const [statsR,monthlyR,priorityR,statusR,activityR,casesR,usersR,notifR,workloadR]=await Promise.all([
+      fetchWithAuth('/api/dashboard/stats'),fetchWithAuth('/api/dashboard/monthly'),fetchWithAuth('/api/dashboard/priority'),
+      fetchWithAuth('/api/dashboard/status'),fetchWithAuth('/api/dashboard/activity'),fetchWithAuth('/api/cases'),
+      fetchWithAuth('/api/users'),fetchWithAuth('/api/notifications'),fetchWithAuth('/api/dashboard/workload')
+    ]);
+    const [stats,monthly,priority,status,activity,cases,users,notifications,workload]=await Promise.all([
+      statsR.json(),monthlyR.json(),priorityR.json(),statusR.json(),activityR.json(),
+      casesR.json(),usersR.json(),notifR.json(),workloadR.json()
+    ]);
+    CASES=cases; USERS=users; NOTIFICATIONS=notifications;
+    renderDashboard(stats,monthly,activity);
+    renderCases();
+    renderReports(priority,status,workload);
+    renderUsers();
+    renderNotifications();
+    updateNotifBadge();
+  } catch(e) { console.error('load error',e); }
+}
+
+// ============ NAVIGATION ============
+function switchView(view, el) {
+  CURRENT_VIEW=view;
+  document.querySelectorAll('.page-section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const target=document.getElementById('view'+view.charAt(0).toUpperCase()+view.slice(1));
+  if(target) target.classList.add('active');
+  if(el) el.classList.add('active');
+  const titles={dashboard:'Dashboard',cases:'Cases',reports:'Reports',users:'Officers',caseDetail:'Case Detail'};
+  document.getElementById('pageTitle').textContent=titles[view]||'Dashboard';
+  if(view==='dashboard') loadAllData();
+  if(view==='cases') renderCases();
+  if(view==='reports') loadAllData();
+  if(view==='users') renderUsers();
+  document.getElementById('sidebar').classList.remove('open');
+}
+
+function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+function openModal(id) { document.getElementById(id).classList.add('active'); }
+function closeModal(id) { document.getElementById(id).classList.remove('active'); PENDING_ACTION=null; }
+
+// ============ DASHBOARD ============
+function renderDashboard(stats,monthly,activity) {
+  const grid=document.getElementById('statsGrid');
+  grid.innerHTML=`
+    <div class="stat-card"><div class="stat-icon blue"><i class="fas fa-folder"></i></div><div class="stat-info"><h4>${stats.total_cases}</h4><p>Total Cases</p></div></div>
+    <div class="stat-card"><div class="stat-icon orange"><i class="fas fa-spinner"></i></div><div class="stat-info"><h4>${stats.active_cases}</h4><p>Active Cases</p></div></div>
+    <div class="stat-card"><div class="stat-icon red"><i class="fas fa-exclamation-triangle"></i></div><div class="stat-info"><h4>${stats.urgent_cases}</h4><p>Urgent (HIGH)</p></div></div>
+    <div class="stat-card"><div class="stat-icon green"><i class="fas fa-check-circle"></i></div><div class="stat-info"><h4>${stats.resolved_cases}</h4><p>Resolved</p></div></div>
+    <div class="stat-card"><div class="stat-icon purple"><i class="fas fa-clock"></i></div><div class="stat-info"><h4>${stats.pending_cases}</h4><p>Pending</p></div></div>
+    <div class="stat-card"><div class="stat-icon teal"><i class="fas fa-users"></i></div><div class="stat-info"><h4>${stats.total_officers}</h4><p>Officers</p></div></div>
+  `;
+
+  // Monthly chart
+  const chart=document.getElementById('monthlyChart');
+  if(monthly.length>0) {
+    const max=Math.max(...monthly.map(m=>m.count),1);
+    chart.innerHTML=monthly.map(m=>
+      `<div style="flex:1;display:flex;flex-direction:column;align-items:center;height:100%;justify-content:flex-end">
+        <div class="bar" style="height:${(m.count/max)*120}px;background:var(--accent);width:70%"></div>
+        <div class="bar-label">${m.month}</div>
+      </div>`
+    ).join('');
+  } else { chart.innerHTML='<div style="color:var(--text-light);padding:40px;text-align:center;width:100%">No data yet</div>'; }
+
+  // Activity feed
+  const feed=document.getElementById('activityFeed');
+  if(activity.length>0) {
+    const colors=['blue','green','orange','red'];
+    feed.innerHTML=activity.map((a,i)=>`
+      <div class="activity-item">
+        <div class="activity-dot ${colors[i%4]}"></div>
+        <div class="activity-content">
+          <p>${a.action}${a.performed_by_name?` by <strong>${a.performed_by_name}</strong>`:''}</p>
+          <small>${a.created_at?new Date(a.created_at).toLocaleString():''}</small>
+        </div>
+      </div>`
+    ).join('');
+  } else { feed.innerHTML='<div style="color:var(--text-light);padding:20px;text-align:center">No recent activity</div>'; }
+}
+
+// ============ CASES ============
+function renderCases() {
+  const search=document.getElementById('caseSearch').value.toLowerCase();
+  const fStatus=document.getElementById('filterStatus').value;
+  const fPriority=document.getElementById('filterPriority').value;
+  let filtered=CASES.filter(c=>{
+    if(search && !(c.case_id?.toLowerCase().includes(search)||c.victim_name?.toLowerCase().includes(search))) return false;
+    if(fStatus && c.status!==fStatus) return false;
+    if(fPriority && c.priority!==fPriority) return false;
+    return true;
+  });
+  const tbody=document.getElementById('casesTableBody');
+  if(filtered.length===0) {
+    tbody.innerHTML='<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-light)">No cases found</td></tr>';
+    return;
+  }
+  tbody.innerHTML=filtered.map(c=>{
+    const badgeClass=c.priority==='HIGH'?'badge-red':c.priority==='MEDIUM'?'badge-orange':'badge-green';
+    const statusClass=c.status==='Resolved'||c.status==='Archived'?'badge-green':
+      c.status==='Submitted'?'badge-blue':c.status==='Assigned'?'badge-orange':'badge-gray';
+    return `<tr class="clickable" onclick="showCaseDetail(${c.id})">
+      <td><strong>${c.case_id||'N/A'}</strong></td>
+      <td>${c.victim_name}</td>
+      <td>${c.incident_type}</td>
+      <td><span class="priority-indicator"><span class="priority-dot ${c.priority.toLowerCase()}"></span> ${c.priority}</span></td>
+      <td><span class="badge ${statusClass}">${c.status}</span></td>
+      <td>${c.assigned_to_name||'<span style="color:var(--text-light)">Unassigned</span>'}</td>
+      <td>${c.date_reported?new Date(c.date_reported).toLocaleDateString():''}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ============ CASE DETAIL ============
+async function showCaseDetail(caseId) {
+  SELECTED_CASE_ID=caseId;
+  switchView('caseDetail');
+  document.getElementById('pageTitle').textContent='Case Detail';
+  try {
+    const r=await fetchWithAuth(`/api/cases/${caseId}`);
+    const d=await r.json();
+    const c=d.case;
+    const badgeClass=c.priority==='HIGH'?'badge-red':c.priority==='MEDIUM'?'badge-orange':'badge-green';
+    const statusClass=c.status==='Resolved'||c.status==='Archived'?'badge-green':
+      c.status==='Submitted'?'badge-blue':c.status==='Assigned'?'badge-orange':'badge-gray';
+
+    document.getElementById('caseDetailContent').innerHTML=`
+      <div class="case-detail-header">
+        <div>
+          <h2>${c.case_id||'N/A'} <span class="badge ${badgeClass}" style="margin-left:8px;vertical-align:middle">${c.priority}</span></h2>
+          <div class="case-meta">
+            <span class="badge ${statusClass}">${c.status}</span>
+            <span style="font-size:13px;color:var(--text-light)">Reported: ${c.date_reported?new Date(c.date_reported).toLocaleString():'N/A'}</span>
+            <span style="font-size:13px;color:var(--text-light)">Assigned: ${c.assigned_to_name||'Not assigned'}</span>
+          </div>
+        </div>
+      </div>
+      <div class="case-detail-grid">
+        <div>
+          <div class="detail-card">
+            <h3><i class="fas fa-info-circle" style="color:var(--accent)"></i> Victim Information</h3>
+            <div class="detail-row"><div class="detail-label">Name</div><div class="detail-value">${c.victim_name}</div></div>
+            <div class="detail-row"><div class="detail-label">Contact</div><div class="detail-value">${c.contact_number||'N/A'}</div></div>
+            <div class="detail-row"><div class="detail-label">Location</div><div class="detail-value">${c.location||'N/A'}</div></div>
+            <div class="detail-row"><div class="detail-label">Incident Type</div><div class="detail-value">${c.incident_type}</div></div>
+            <div class="detail-row"><div class="detail-label">Description</div><div class="detail-value">${c.description}</div></div>
+            ${c.file_path?`<div class="detail-row"><div class="detail-label">Evidence</div><div class="detail-value"><a href="/${c.file_path}" target="_blank" style="color:var(--accent)"><i class="fas fa-paperclip"></i> View file</a></div></div>`:''}
+          </div>
+          ${c.case_notes?`<div class="detail-card"><h3><i class="fas fa-sticky-note" style="color:var(--warning)"></i> Case Notes</h3><pre style="white-space:pre-wrap;font-family:inherit;font-size:14px;line-height:1.6">${c.case_notes}</pre></div>`:''}
+          ${c.resolution_notes?`<div class="detail-card"><h3><i class="fas fa-check" style="color:var(--success)"></i> Resolution Notes</h3><p style="font-size:14px">${c.resolution_notes}</p></div>`:''}
+
+          <div class="detail-card">
+            <h3><i class="fas fa-history" style="color:var(--primary)"></i> Activity Timeline</h3>
+            <div class="timeline" id="timeline">
+              ${d.activities.length===0?'<div style="color:var(--text-light);padding:12px">No activity recorded</div>':
+                d.activities.map(a=>`<div class="timeline-item"><div class="time">${a.created_at?new Date(a.created_at).toLocaleString():''}</div><p>${a.action}${a.notes?': '+a.notes:''}</p></div>`).join('')}
+            </div>
+          </div>
+
+          <div class="detail-card">
+            <h3><i class="fas fa-share-alt" style="color:var(--warning)"></i> Referrals</h3>
+            ${d.referrals.length===0?'<div style="color:var(--text-light);padding:12px">No referrals made</div>':
+              `<div class="table-wrap"><table><thead><tr><th>Referred To</th><th>Reason</th><th>Status</th><th>Date</th></tr></thead><tbody>${
+                d.referrals.map(r=>`<tr><td>${r.referred_to}</td><td>${r.reason}</td><td><span class="badge badge-blue">${r.status}</span></td><td>${r.created_at?new Date(r.created_at).toLocaleDateString():''}</td></tr>`).join('')
+              }</tbody></table></div>`}
+          </div>
+        </div>
+
+        <div>
+          <div class="detail-card">
+            <h3><i class="fas fa-tools" style="color:var(--accent)"></i> Actions</h3>
+            <div class="action-btns">
+              ${c.status!=='Resolved'&&c.status!=='Archived'?`
+                <button class="btn btn-accent btn-sm" onclick="openAssignModal(${c.id})"><i class="fas fa-user-check"></i> Assign</button>
+                <button class="btn btn-primary btn-sm" onclick="openNoteModal(${c.id})"><i class="fas fa-plus"></i> Add Note</button>
+                <button class="btn btn-success btn-sm" onclick="openResolveModal(${c.id})"><i class="fas fa-check"></i> Resolve</button>
+                <button class="btn btn-outline btn-sm" onclick="openReferModal(${c.id})"><i class="fas fa-share"></i> Refer</button>
+                <button class="btn btn-danger btn-sm" onclick="openArchiveModal(${c.id})"><i class="fas fa-archive"></i> Archive</button>
+              `:`<div style="color:var(--text-light);font-size:14px;padding:8px 0">Case is ${c.status.toLowerCase()} — no further actions available</div>`}
+            </div>
+          </div>
+          <div class="detail-card">
+            <h3><i class="fas fa-flag" style="color:var(--text-light)"></i> Status Guide</h3>
+            <div style="font-size:13px;line-height:2">
+              <span class="badge badge-blue">Submitted</span> → 
+              <span class="badge badge-orange">Assigned</span> → 
+              <span class="badge badge-gray">Ongoing</span> → 
+              <span class="badge badge-gray">Monitoring</span> → 
+              <span class="badge badge-green">Resolved</span> → 
+              <span class="badge badge-gray">Archived</span>
+            </div>
+          </div>
+        </div>
+      </div>`;
+  } catch(e) { document.getElementById('caseDetailContent').innerHTML=`<div class="loading"><i class="fas fa-exclamation-circle" style="color:var(--danger)"></i><p>Error loading case</p></div>`; }
+}
+
+// ============ CASE ACTIONS ============
+function openAssignModal(caseId) {
+  PENDING_ACTION={type:'assign',caseId};
+  const options=USERS.filter(u=>u.is_active).map(u=>`<option value="${u.id}">${u.full_name} (${u.role})</option>`).join('');
+  document.getElementById('actionModalTitle').textContent='Assign Case';
+  document.getElementById('actionModalBody').innerHTML=`
+    <div class="form-group"><label>Select Officer</label><select id="assignOfficer">${options}</select></div>`;
+  openModal('actionModal');
+}
+
+function openNoteModal(caseId) {
+  PENDING_ACTION={type:'note',caseId};
+  document.getElementById('actionModalTitle').textContent='Add Case Note';
+  document.getElementById('actionModalBody').innerHTML=`
+    <div class="form-group"><label>Notes</label><textarea id="noteText" rows="4" placeholder="Enter case notes..."></textarea></div>`;
+  openModal('actionModal');
+}
+
+function openResolveModal(caseId) {
+  PENDING_ACTION={type:'resolve',caseId};
+  document.getElementById('actionModalTitle').textContent='Resolve Case';
+  document.getElementById('actionModalBody').innerHTML=`
+    <div class="form-group"><label>Resolution Notes *</label><textarea id="resolveText" rows="4" placeholder="Describe the resolution and actions taken..."></textarea></div>`;
+  openModal('actionModal');
+}
+
+function openReferModal(caseId) {
+  PENDING_ACTION={type:'refer',caseId};
+  document.getElementById('actionModalTitle').textContent='Create Referral';
+  document.getElementById('actionModalBody').innerHTML=`
+    <div class="form-group"><label>Refer To</label><select id="referTo"><option value="PNP">PNP (Police)</option><option value="DSWD">DSWD (Social Welfare)</option><option value="Hospital">Hospital / Medical</option><option value="Barangay">Barangay Council</option></select></div>
+    <div class="form-group"><label>Reason</label><textarea id="referReason" rows="3" placeholder="Reason for referral..."></textarea></div>`;
+  openModal('actionModal');
+}
+
+function openArchiveModal(caseId) {
+  PENDING_ACTION={type:'archive',caseId};
+  document.getElementById('actionModalTitle').textContent='Archive Case';
+  document.getElementById('actionModalBody').innerHTML='<p style="color:var(--text-light)">Are you sure you want to archive this case? This action can be reviewed later.</p>';
+  openModal('actionModal');
+}
+
+async function confirmAction() {
+  if(!PENDING_ACTION) return;
+  const {type,caseId}=PENDING_ACTION;
+  try {
+    if(type==='assign') {
+      const officerId=document.getElementById('assignOfficer').value;
+      const fd=new FormData(); fd.append('officer_id',officerId);
+      await fetchWithAuth(`/api/cases/${caseId}/assign`,{method:'POST',body:fd});
+    } else if(type==='note') {
+      const notes=document.getElementById('noteText').value;
+      if(!notes) return alert('Please enter notes');
+      const fd=new FormData(); fd.append('notes',notes);
+      await fetchWithAuth(`/api/cases/${caseId}/note`,{method:'POST',body:fd});
+    } else if(type==='resolve') {
+      const notes=document.getElementById('resolveText').value;
+      if(!notes) return alert('Please enter resolution notes');
+      const fd=new FormData(); fd.append('resolution_notes',notes);
+      await fetchWithAuth(`/api/cases/${caseId}/resolve`,{method:'POST',body:fd});
+    } else if(type==='refer') {
+      const refTo=document.getElementById('referTo').value;
+      const reason=document.getElementById('referReason').value;
+      if(!reason) return alert('Please enter a reason');
+      await fetchWithAuth(`/api/cases/${caseId}/refer`,{method:'POST',body:JSON.stringify({referred_to:refTo,reason:reason})});
+    } else if(type==='archive') {
+      await fetchWithAuth(`/api/cases/${caseId}/archive`,{method:'POST'});
+    }
+    closeModal('actionModal');
+    showCaseDetail(caseId);
+    loadAllData();
+  } catch(e) { alert('Action failed'); }
+}
+
+// ============ REPORTS ============
+function renderReports(priority,status,workload) {
+  const total=CASES.length;
+  const urgent=CASES.filter(c=>c.priority==='HIGH').length;
+  const active=CASES.filter(c=>['Submitted','Assigned','Ongoing','Monitoring'].includes(c.status)).length;
+  const resolved=CASES.filter(c=>['Resolved','Archived'].includes(c.status)).length;
+  document.getElementById('reportStatsGrid').innerHTML=`
+    <div class="stat-card"><div class="stat-icon blue"><i class="fas fa-folder"></i></div><div class="stat-info"><h4>${total}</h4><p>Total Cases</p></div></div>
+    <div class="stat-card"><div class="stat-icon orange"><i class="fas fa-spinner"></i></div><div class="stat-info"><h4>${active}</h4><p>Active</p></div></div>
+    <div class="stat-card"><div class="stat-icon red"><i class="fas fa-exclamation-triangle"></i></div><div class="stat-info"><h4>${urgent}</h4><p>Urgent</p></div></div>
+    <div class="stat-card"><div class="stat-icon green"><i class="fas fa-check-circle"></i></div><div class="stat-info"><h4>${resolved}</h4><p>Resolved</p></div></div>`;
+
+  const pMax=Math.max(...priority.map(p=>p.count),1);
+  const pColors={'HIGH':'var(--danger)','MEDIUM':'var(--warning)','LOW':'var(--success)'};
+  document.getElementById('priorityChart').innerHTML=priority.map(p=>
+    `<div style="flex:1;display:flex;flex-direction:column;align-items:center;height:100%;justify-content:flex-end">
+      <div class="bar" style="height:${(p.count/pMax)*120}px;background:${pColors[p.priority]||'var(--accent)'};width:70%"></div>
+      <div class="bar-label">${p.priority}<br><strong>${p.count}</strong></div>
+    </div>`
+  ).join('')||'<div style="color:var(--text-light);padding:40px;text-align:center;width:100%">No data</div>';
+
+  const sMax=Math.max(...status.map(s=>s.count),1);
+  const sColors={'Submitted':'var(--accent)','Assigned':'var(--warning)','Ongoing':'var(--primary-light)','Monitoring':'var(--primary)','Resolved':'var(--success)','Archived':'var(--text-light)'};
+  document.getElementById('statusChart').innerHTML=status.map(s=>
+    `<div style="flex:1;display:flex;flex-direction:column;align-items:center;height:100%;justify-content:flex-end">
+      <div class="bar" style="height:${(s.count/sMax)*120}px;background:${sColors[s.status]||'var(--accent)'};width:70%"></div>
+      <div class="bar-label">${s.status}<br><strong>${s.count}</strong></div>
+    </div>`
+  ).join('')||'<div style="color:var(--text-light);padding:40px;text-align:center;width:100%">No data</div>';
+
+  document.getElementById('workloadBody').innerHTML=workload.length===0?
+    '<tr><td colspan="4" style="text-align:center;color:var(--text-light)">No officers registered</td></tr>':
+    workload.map(w=>`<tr><td><strong>${w.officer_name}</strong></td><td>${w.assigned_count}</td><td>${w.active_count}</td><td>${w.resolved_count}</td></tr>`).join('');
+}
+
+// ============ USERS ============
+function renderUsers() {
+  const tbody=document.getElementById('usersTableBody');
+  tbody.innerHTML=USERS.length===0?'<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--text-light)">No users registered</td></tr>':
+    USERS.map(u=>`<tr>
+      <td><strong>${u.full_name}</strong></td>
+      <td>${u.username}</td>
+      <td>${u.email}</td>
+      <td><span class="badge ${u.role==='admin'?'badge-red':'badge-blue'}">${u.role}</span></td>
+      <td>${u.barangay||'N/A'}</td>
+      <td>${u.contact_number||'N/A'}</td>
+      <td><span class="badge ${u.is_active?'badge-green':'badge-gray'}">${u.is_active?'Active':'Inactive'}</span></td>
+      <td>${u.created_at?new Date(u.created_at).toLocaleDateString():'N/A'}</td>
+    </tr>`).join('');
+}
+
+// ============ NOTIFICATIONS ============
+function renderNotifications() {
+  const list=document.getElementById('notifList');
+  list.innerHTML=NOTIFICATIONS.length===0?'<div style="color:var(--text-light);padding:20px;text-align:center">No notifications</div>':
+    NOTIFICATIONS.map(n=>`<div style="padding:12px 0;border-bottom:1px solid #f0f2f5;${n.is_read?'':'background:#f0f7ff;margin:0 -12px;padding:12px'}">
+      <p style="font-size:14px">${n.message}</p>
+      <div style="display:flex;justify-content:space-between;margin-top:4px">
+        <small style="color:var(--text-light)">${n.created_at?new Date(n.created_at).toLocaleString():''}</small>
+        ${!n.is_read?`<button class="btn btn-sm btn-outline" onclick="markNotifRead(${n.id})">Mark read</button>`:''}
+      </div>
+    </div>`).join('');
+}
+
+async function markNotifRead(id) {
+  await fetchWithAuth(`/api/notifications/${id}/read`,{method:'PUT'});
+  const r=await fetchWithAuth('/api/notifications'); NOTIFICATIONS=await r.json();
+  renderNotifications(); updateNotifBadge();
+}
+
+function updateNotifBadge() {
+  const unread=NOTIFICATIONS.filter(n=>!n.is_read).length;
+  const badge=document.getElementById('notifBadge');
+  if(unread>0) { badge.textContent=unread; badge.style.display='flex'; }
+  else badge.style.display='none';
+}
+
+function toggleNotifications() {
+  renderNotifications(); openModal('notifModal');
+}
+
+// ============ AUTO INIT ============
+if(TOKEN) {
+  (async()=>{
+    try {
+      const r=await fetchWithAuth('/api/me');
+      CURRENT_USER=await r.json();
+      if(['admin','officer'].includes(CURRENT_USER.role)) {
+        initApp();
+      } else {
+        localStorage.removeItem('vawc_token');
+        TOKEN='';
+        document.getElementById('loginPage').style.display='flex';
+      }
+    } catch(e) { document.getElementById('loginPage').style.display='flex'; }
+  })();
+} else { document.getElementById('loginPage').style.display='flex'; }
+</script>
+</body>
+</html>

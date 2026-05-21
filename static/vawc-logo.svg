@@ -1,0 +1,18 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Shield base -->
+  <path d="M100 20 L160 50 L160 100 C160 140 130 170 100 185 C70 170 40 140 40 100 L40 50 Z" fill="#d81b60" opacity="0.9"/>
+  
+  <!-- Shield inner -->
+  <path d="M100 35 L145 58 L145 98 C145 132 118 158 100 172 C82 158 55 132 55 98 L55 58 Z" fill="#f8bbd0" opacity="0.15"/>
+  
+  <!-- Woman silhouette -->
+  <circle cx="100" cy="72" r="18" fill="#ffffff" opacity="0.9"/>
+  <path d="M78 140 C78 110 88 95 100 95 C112 95 122 110 122 140" fill="#ffffff" opacity="0.9"/>
+  
+  <!-- Helping hands -->
+  <path d="M45 105 C55 95 65 100 75 115" stroke="#ffffff" stroke-width="6" fill="none" stroke-linecap="round" opacity="0.7"/>
+  <path d="M155 105 C145 95 135 100 125 115" stroke="#ffffff" stroke-width="6" fill="none" stroke-linecap="round" opacity="0.7"/>
+  
+  <!-- Protection arc -->
+  <path d="M50 55 C65 42 85 38 100 38 C115 38 135 42 150 55" stroke="#ffffff" stroke-width="3" fill="none" opacity="0.5" stroke-linecap="round"/>
+</svg>

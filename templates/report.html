@@ -1,242 +1,269 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VAWC Reporting System</title>
-
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="/static/awareness.css">
-    <style>
-        body {
-            font-family: 'Segoe UI', sans-serif;
-            background: #2d1b2e;
-            margin: 0;
-            padding: 0;
-        }
-
-        .container {
-            max-width: 420px;
-            margin: 60px auto;
-            background: #4b2a4d;
-            padding: 30px;
-            border-radius: 20px;
-            box-shadow: 0px 10px 30px rgba(0,0,0,0.3);
-            position: relative;
-            overflow: hidden;
-        }
-
-        /* Circles */
-        .circle {
-            position: absolute;
-            width: 120px;
-            height: 120px;
-            border: 2px solid #cbb4c4;
-            border-radius: 50%;
-            top: -30px;
-            right: -30px;
-        }
-
-        .circle2 {
-            position: absolute;
-            width: 90px;
-            height: 90px;
-            border: 2px solid #cbb4c4;
-            border-radius: 50%;
-            top: 20px;
-            right: 40px;
-        }
-
-        h1 {
-            color: #ffffff;
-            font-size: 20px;
-            margin-bottom: 5px;
-        }
-
-        h2 {
-            color: #d8c3d8;
-            font-size: 14px;
-            margin-bottom: 20px;
-        }
-
-        label {
-            color: #f1e4f1;
-            font-size: 13px;
-            margin-top: 12px;
-            display: block;
-        }
-
-        input, textarea, select {
-            width: 100%;
-            padding: 10px;
-            margin-top: 5px;
-            border-radius: 12px;
-            border: none;
-            background: #8d6b8f;
-            color: white;
-            font-size: 14px;
-        }
-
-        input::placeholder, textarea::placeholder {
-            color: #e0cfe0;
-        }
-
-        textarea {
-            height: 90px;
-            resize: none;
-        }
-
-        button {
-            width: 100%;
-            padding: 12px;
-            margin-top: 20px;
-            background: #cbb4c4;
-            color: #3a1f3c;
-            border: none;
-            border-radius: 12px;
-            font-size: 15px;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-
-        button:hover {
-            background: #e2d3df;
-        }
-
-        .success {
-            text-align: center;
-            margin-top: 10px;
-            font-weight: bold;
-        }
-
-        .note {
-            font-size: 12px;
-            color: #d8c3d8;
-            margin-bottom: 10px;
-        }
-    </style>
+    <link rel="stylesheet" href="/static/vawc-assistant.css">
+    <link rel="stylesheet" href="/static/report.css">
 </head>
 
 <body>
 
-<div class="container">
+<div class="report-page">
+    <div class="report-card">
 
-    <div class="circle"></div>
-    <div class="circle2"></div>
+        <!-- HEADER STRIP -->
+        <div class="report-header">
+            <div class="report-logo">
+                <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M100 20 L160 50 L160 100 C160 140 130 170 100 185 C70 170 40 140 40 100 L40 50 Z" fill="#d81b60" opacity="0.9"/>
+                    <path d="M100 35 L145 58 L145 98 C145 132 118 158 100 172 C82 158 55 132 55 98 L55 58 Z" fill="#f8bbd0" opacity="0.15"/>
+                    <circle cx="100" cy="72" r="18" fill="#ffffff" opacity="0.9"/>
+                    <path d="M78 140 C78 110 88 95 100 95 C112 95 122 110 122 140" fill="#ffffff" opacity="0.9"/>
+                    <path d="M45 105 C55 95 65 100 75 115" stroke="#ffffff" stroke-width="6" fill="none" stroke-linecap="round" opacity="0.7"/>
+                    <path d="M155 105 C145 95 135 100 125 115" stroke="#ffffff" stroke-width="6" fill="none" stroke-linecap="round" opacity="0.7"/>
+                    <path d="M50 55 C65 42 85 38 100 38 C115 38 135 42 150 55" stroke="#ffffff" stroke-width="3" fill="none" opacity="0.5" stroke-linecap="round"/>
+                </svg>
+            </div>
+            <div class="report-header-text">
+                <h1>Barangay VAWC Reporting System</h1>
+                <h2>Report an incident (Mag-report ng insidente)</h2>
+            </div>
+        </div>
 
-    <h1>Barangay VAWC Reporting System</h1>
-    <h2>Report an incident (Mag-report ng insidente)</h2>
+        <!-- THREE PANEL BODY -->
+        <div class="report-body">
 
-    <p class="note">Your report is safe and confidential</p>
+            <!-- MOBILE TOGGLE: Know Your Rights -->
+            <div class="mobile-panel-toggle" onclick="toggleMobilePanel('reportPanelLeft')">
+              <span><i class="fas fa-scale-balanced"></i> Know Your Rights</span>
+              <i class="fas fa-chevron-down toggle-icon"></i>
+            </div>
 
-    <form id="reportForm">
+            <!-- LEFT PANEL: VAWC LAW, RIGHTS, AND ETC. -->
+            <div class="report-panel-left" id="reportPanelLeft">
+                <div class="panel-title"><i class="fas fa-scale-balanced"></i> VAWC LAW, RIGHTS, AND ETC.</div>
 
-        <label>Name of victim (Pangalan ng biktima):</label>
-        <input type="text" id="victim_name" required placeholder="Example: Maria Santos">
+                <!-- What is VAWC -->
+                <div class="rights-mini-section">
+                    <h4><i class="fas fa-info-circle"></i> What is VAWC?</h4>
+                    <div class="rights-mini-item" onclick="toggleRightsItem(this)">
+                        <h5>Definition</h5>
+                        <p>Violence Against Women and Children (VAWC) refers to any act of gender-based violence resulting in physical, sexual, psychological, or economic harm. This includes threats, coercion, harassment, and arbitrary deprivation of liberty.</p>
+                    </div>
+                </div>
 
-        <label>Contact Number (Numero ng Telepono):</label>
-        <input type="text" id="contact_number" required placeholder="Example: 09123456789">
+                <!-- Your Rights -->
+                <div class="rights-mini-section">
+                    <h4><i class="fas fa-shield-halved"></i> Your Rights</h4>
+                    <div class="rights-mini-item" onclick="toggleRightsItem(this)">
+                        <h5>Right to Protection</h5>
+                        <p>Every woman has the right to be protected from all forms of violence. The State is duty-bound to ensure your safety and well-being.</p>
+                    </div>
+                    <div class="rights-mini-item" onclick="toggleRightsItem(this)">
+                        <h5>Right to Report Abuse</h5>
+                        <p>You have the right to report any incident of abuse to your barangay, the PNP, or DSWD without fear of retaliation.</p>
+                    </div>
+                    <div class="rights-mini-item" onclick="toggleRightsItem(this)">
+                        <h5>Right to Legal Assistance</h5>
+                        <p>Free legal assistance is available through the Public Attorney's Office (PAO) and accredited NGOs.</p>
+                    </div>
+                    <div class="rights-mini-item" onclick="toggleRightsItem(this)">
+                        <h5>Right to Medical Support</h5>
+                        <p>You are entitled to immediate medical treatment, examination, and counseling at any government hospital.</p>
+                    </div>
+                    <div class="rights-mini-item" onclick="toggleRightsItem(this)">
+                        <h5>Right to Privacy</h5>
+                        <p>Your identity and case details shall be kept confidential throughout the legal process.</p>
+                    </div>
+                </div>
 
-        <label>Type of incident (Uri ng insidente):</label>
-        <select id="incident_type" required>
-            <option value="">Select (Pumili)</option>
-            <option>Physical Abuse (Pananakit)</option>
-            <option>Emotional Abuse (Pananakit ng Damdamin)</option>
-            <option>Threat (Pananakot)</option>
-            <option>Other (Iba pa)</option>
-        </select>
+                <!-- Philippine VAWC Laws -->
+                <div class="rights-mini-section">
+                    <h4><i class="fas fa-book"></i> Philippine VAWC Laws</h4>
+                    <ul class="laws-mini-list">
+                        <li onclick="toggleLawItem(this)">
+                            <strong>RA 9262</strong>
+                            Anti-Violence Against Women and Their Children Act of 2004. Provides for Barangay Protection Orders, TPO, and PPO.
+                        </li>
+                        <li onclick="toggleLawItem(this)">
+                            <strong>RA 8353</strong>
+                            The Anti-Rape Law of 1997. Reclassifies rape as a crime against persons.
+                        </li>
+                        <li onclick="toggleLawItem(this)">
+                            <strong>RA 7877</strong>
+                            Anti-Sexual Harassment Act of 1995. Prohibits sexual harassment in employment and education.
+                        </li>
+                        <li onclick="toggleLawItem(this)">
+                            <strong>RA 11313</strong>
+                            Safe Spaces Act (Bawal Bastos Law). Prohibits gender-based harassment in public spaces and online.
+                        </li>
+                    </ul>
+                </div>
 
-        <label>Description (Detalye ng Insidente):</label>
-        <textarea id="description" required placeholder="Example: Sinaktan po ako kagabi sa loob ng bahay..."></textarea>
+                <!-- Emergency Help -->
+                <div class="emergency-mini">
+                    <h4><i class="fas fa-circle-exclamation"></i> Emergency Contacts</h4>
+                    <div class="emergency-mini-item">
+                        <i class="fas fa-building"></i>
+                        <span><strong>Barangay VAWC Office</strong> — Visit your barangay hall</span>
+                    </div>
+                    <div class="emergency-mini-item">
+                        <i class="fas fa-shield"></i>
+                        <span><strong>PNP WCPD</strong> — 0919-777-7377</span>
+                    </div>
+                    <div class="emergency-mini-item">
+                        <i class="fas fa-hand-holding-heart"></i>
+                        <span><strong>DSWD</strong> — (02) 8931-8101</span>
+                    </div>
+                    <div class="emergency-mini-item">
+                        <i class="fas fa-phone-volume"></i>
+                        <span><strong>Emergency</strong> — 911 or 8888</span>
+                    </div>
+                </div>
+            </div>
 
-        <label>Location (Lugar ng pangyayari):</label>
-        <input type="text" id="location" required placeholder="Example: Barangay 5, Manila">
+            <!-- CENTER PANEL: REPORT FORM -->
+            <div class="report-panel-center">
+                <p class="form-intro"><i class="fas fa-lock"></i> Your report is safe and confidential</p>
 
-        <label>Attachment (Optional - Proof):</label>
-        <input type="file" id="file">
+                <form id="reportForm">
+                    <label>Name of victim (Pangalan ng biktima):</label>
+                    <input type="text" id="victim_name" required minlength="1" maxlength="200" placeholder="Example: Maria Santos">
 
-        <button type="submit">Submit report (I-submit ang report)</button>
+                    <label>Contact Number (Numero ng Telepono):</label>
+                    <input type="text" id="contact_number" required minlength="7" maxlength="50" placeholder="Example: 09123456789">
 
-        <div class="success" id="successMsg"></div>
+                    <label>Type of incident (Uri ng insidente):</label>
+                    <select id="incident_type" required>
+                        <option value="">Select (Pumili)</option>
+                        <option>Physical Abuse (Pananakit)</option>
+                        <option>Emotional Abuse (Pananakit ng Damdamin)</option>
+                        <option>Threat (Pananakot)</option>
+                        <option>Other (Iba pa)</option>
+                    </select>
 
-    </form>
+                    <label>Description (Detalye ng Insidente):</label>
+                    <textarea id="description" required minlength="10" maxlength="5000" placeholder="Example: Sinaktan po ako kagabi sa loob ng bahay..."></textarea>
 
+                    <label>Location (Lugar ng pangyayari):</label>
+                    <input type="text" id="location" required minlength="1" maxlength="300" placeholder="Example: Barangay 5, Manila">
+
+                    <label>Attachment (Optional - Proof):</label>
+                    <input type="file" id="file">
+
+                    <button type="submit" class="form-submit-btn">Submit report (I-submit ang report)</button>
+
+                    <div class="success" id="successMsg"></div>
+                </form>
+            </div>
+
+            <!-- MOBILE TOGGLE: VAWC Assistant -->
+            <div class="mobile-panel-toggle" onclick="toggleMobilePanel('reportPanelRight')">
+              <span><i class="fas fa-robot"></i> VAWC Assistant</span>
+              <i class="fas fa-chevron-down toggle-icon"></i>
+            </div>
+
+            <!-- RIGHT PANEL: VAWC ASSISTANT -->
+            <div class="report-panel-right" id="reportPanelRight">
+                <!-- Assistant Header -->
+                <div class="assistant-header">
+                    <div class="assistant-avatar">
+                        <i class="fas fa-robot"></i>
+                        <span class="online-dot"></span>
+                    </div>
+                    <div class="assistant-header-info">
+                        <h3>VAWC Assistant</h3>
+                        <span>Online - Ready to help</span>
+                    </div>
+                    <div class="lang-toggle">
+                        <span class="lang-opt active" data-lang="en" onclick="toggleReportLang('en')">EN</span>
+                        <span style="color: var(--vawc-text-muted); font-size: 10px;">|</span>
+                        <span class="lang-opt" data-lang="tl" onclick="toggleReportLang('tl')">TL</span>
+                    </div>
+                </div>
+
+                <!-- FAQ Section -->
+                <div class="assistant-faq-section" id="reportFaqSection">
+                    <div class="faq-section-title">Awareness / Kaalaman</div>
+                    <div id="reportFaqList"></div>
+                </div>
+
+                <!-- Chat Section -->
+                <div class="assistant-chat-section">
+                    <div class="chat-section-title"><i class="fas fa-comments"></i> Chat / Usapin</div>
+                    <div class="chat-messages" id="reportChatMsgs">
+                        <div class="chat-msg bot"><div class="chat-msg-text" id="reportChatGreeting">Hello! I am your VAWC Assistant. Ask me about VAWC, your rights, or where to get help. / Ako ang iyong VAWC Assistant. Magtanong tungkol sa VAWC, iyong mga karapatan, o saan makakuha ng tulong.</div></div>
+                    </div>
+                    <div class="chat-input-row">
+                        <input type="text" id="reportChatInput" placeholder="Type a message..." onkeydown="if(event.key==='Enter') sendReportMessage()">
+                        <button class="chat-send-btn" onclick="sendReportMessage()"><i class="fas fa-paper-plane"></i></button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
 </div>
 
-<script>
-document.getElementById("reportForm").addEventListener("submit", async function(e){
-    e.preventDefault();
-
-    const successMsg = document.getElementById("successMsg");
-    successMsg.style.color = "white";
-    successMsg.innerText = "Submitting...";
-
-    const formData = new FormData();
-
-    formData.append("victim_name", document.getElementById("victim_name").value);
-    formData.append("contact_number", document.getElementById("contact_number").value);
-    formData.append("incident_type", document.getElementById("incident_type").value);
-    formData.append("description", document.getElementById("description").value);
-    formData.append("location", document.getElementById("location").value);
-
-    const fileInput = document.getElementById("file");
-    if (fileInput.files.length > 0) {
-        formData.append("file", fileInput.files[0]);
-    }
-
-    try {
-        const response = await fetch("/submit_report", {
-            method: "POST",
-            body: formData
-        });
-
-        if(response.ok){
-            successMsg.style.color = "#b6ffb3";
-            successMsg.innerText = "✅ Report submitted successfully!";
-            document.getElementById("reportForm").reset();
-        } else {
-            successMsg.style.color = "#ffb3b3";
-            successMsg.innerText = "❌ Error occurred";
-        }
-
-    } catch (error) {
-        successMsg.style.color = "#ffb3b3";
-        successMsg.innerText = "❌ Server not reachable";
-    }
-});
-</script>
-    } catch (error) {
-        successMsg.style.color = "#ffb3b3";
-        successMsg.innerText = "❌ Server not reachable";
-    }
-});
-</script>
-
-<!-- ============ VAWC AWARENESS FLOATING BUTTON ============ -->
-<div class="awareness-fab" id="awarenessFab" role="button" tabindex="0" aria-label="Know Your Rights">
-  <div class="fab-button">
-    <i class="fas fa-scale-balanced"></i>
-    <div class="fab-pulse-ring"></div>
-    <div class="fab-pulse-ring"></div>
+<!-- ============ FLOATING ACTION GROUP (BACKUP ACCESS) ============ -->
+<div class="fab-group" id="fabGroup">
+  <div class="awareness-fab" id="awarenessFab" role="button" tabindex="0" aria-label="Know Your Rights">
+    <div class="fab-button">
+      <i class="fas fa-scale-balanced"></i>
+      <div class="fab-pulse-ring"></div>
+      <div class="fab-pulse-ring"></div>
+    </div>
+    <div class="fab-label">
+      <span class="fab-title">Know Your Rights</span>
+      <span class="fab-subtitle">Learn about VAWC laws & protection</span>
+    </div>
   </div>
-  <div class="fab-label">
-    <span class="fab-title">Know Your Rights</span>
-    <span class="fab-subtitle">Learn about VAWC laws &amp; protection</span>
+
+  <div class="assistant-fab" id="assistantFab" role="button" tabindex="0" aria-label="VAWC Assistant" onclick="toggleVAWCAssistant()">
+    <div class="fab-button">
+      <svg viewBox="0 0 100 100" width="26" height="26" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="robotFem" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#d81b60"/>
+            <stop offset="100%" stop-color="#ff4081"/>
+          </linearGradient>
+        </defs>
+        <rect x="22" y="28" width="56" height="48" rx="16" fill="url(#robotFem)"/>
+        <line x1="50" y1="28" x2="50" y2="14" stroke="#d81b60" stroke-width="2.5" stroke-linecap="round"/>
+        <circle cx="50" cy="12" r="4" fill="#ff4081"/>
+        <ellipse cx="38" cy="50" rx="6" ry="6" fill="#2d1b2e"/>
+        <ellipse cx="62" cy="50" rx="6" ry="6" fill="#2d1b2e"/>
+        <circle cx="36" cy="48" r="2" fill="rgba(255,255,255,0.8)"/>
+        <circle cx="60" cy="48" r="2" fill="rgba(255,255,255,0.8)"/>
+        <path d="M 38 62 Q 50 72 62 62" stroke="#2d1b2e" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <path d="M 78 36 Q 90 26 78 22 Q 66 26 78 36" fill="#ff80ab"/>
+      </svg>
+      <div class="fab-pulse-ring"></div>
+      <div class="fab-pulse-ring"></div>
+    </div>
+    <div class="fab-label">
+      <span class="fab-title">VAWC Assistant</span>
+      <span class="fab-subtitle">Get support & information</span>
+    </div>
   </div>
 </div>
 
-<!-- ============ AWARENESS MODAL ============ -->
+<!-- ============ AWARENESS MODAL (FULL VERSION) ============ -->
 <div class="awareness-overlay" id="awarenessOverlay">
   <div class="awareness-modal">
     <button class="awareness-close" id="awarenessClose" aria-label="Close">&times;</button>
     <div class="awareness-content">
 
-      <!-- Header -->
       <div class="awareness-header">
         <div class="header-icon"><i class="fas fa-scale-balanced"></i></div>
         <h2>Know Your Rights</h2>
         <p>Learn about VAWC laws, your rights as a woman, and where to find help and protection.</p>
       </div>
 
-      <!-- SECTION A: What is VAWC -->
       <section class="awareness-section">
         <h3><i class="fas fa-info-circle"></i> What is VAWC?</h3>
         <div class="section-intro">
@@ -245,7 +272,6 @@ document.getElementById("reportForm").addEventListener("submit", async function(
         </div>
       </section>
 
-      <!-- SECTION B: Women's Rights -->
       <section class="awareness-section">
         <h3><i class="fas fa-shield-halved"></i> Your Rights as a Woman</h3>
         <div class="rights-grid">
@@ -271,18 +297,17 @@ document.getElementById("reportForm").addEventListener("submit", async function(
           </div>
           <div class="right-card">
             <div class="card-icon"><i class="fas fa-lock"></i></div>
-            <div class="card-title">Right to Privacy &amp; Confidentiality</div>
+            <div class="card-title">Right to Privacy & Confidentiality</div>
             <div class="card-desc">Your identity and the details of your case shall be kept confidential throughout the legal and investigation process.</div>
           </div>
           <div class="right-card">
             <div class="card-icon"><i class="fas fa-house-chimney"></i></div>
-            <div class="card-title">Right to Shelter &amp; Safety</div>
+            <div class="card-title">Right to Shelter & Safety</div>
             <div class="card-desc">Temporary shelter, protection, and psychosocial support are available through DSWD, local government units, and women's shelters.</div>
           </div>
         </div>
       </section>
 
-      <!-- SECTION C: Philippine VAWC Laws -->
       <section class="awareness-section">
         <h3><i class="fas fa-book"></i> Philippine VAWC Laws</h3>
         <div class="laws-grid">
@@ -329,9 +354,8 @@ document.getElementById("reportForm").addEventListener("submit", async function(
         </div>
       </section>
 
-      <!-- SECTION D: Emergency Help -->
       <section class="awareness-section emergency-section">
-        <h3><i class="fas fa-circle-exclamation"></i> Emergency Help &amp; Contacts</h3>
+        <h3><i class="fas fa-circle-exclamation"></i> Emergency Help & Contacts</h3>
         <div class="emergency-grid">
           <div class="emergency-card">
             <div class="emergency-icon">
@@ -383,7 +407,6 @@ document.getElementById("reportForm").addEventListener("submit", async function(
         </div>
       </section>
 
-      <!-- Footer -->
       <div class="awareness-footer">
         <p><i class="fas fa-heart" style="color:#cbb4c4"></i> You are valued, you are protected, and you have rights. <i class="fas fa-heart" style="color:#cbb4c4"></i></p>
       </div>
@@ -393,5 +416,234 @@ document.getElementById("reportForm").addEventListener("submit", async function(
 </div>
 
 <script src="/static/awareness.js"></script>
+
+<!-- ============ INLINE SCRIPTS: PRESERVE ALL EXISTING LOGIC ============ -->
+<script>
+// ========== FORM SUBMISSION ==========
+document.getElementById("reportForm").addEventListener("submit", async function(e){
+    e.preventDefault();
+
+    const successMsg = document.getElementById("successMsg");
+    successMsg.style.color = "white";
+    successMsg.innerText = "Submitting...";
+
+    const formData = new FormData();
+
+    formData.append("victim_name", document.getElementById("victim_name").value);
+    formData.append("contact_number", document.getElementById("contact_number").value);
+    formData.append("incident_type", document.getElementById("incident_type").value);
+    formData.append("description", document.getElementById("description").value);
+    formData.append("location", document.getElementById("location").value);
+
+    const fileInput = document.getElementById("file");
+    if (fileInput.files.length > 0) {
+        formData.append("file", fileInput.files[0]);
+    }
+
+    // [DEBUG] Log outgoing FormData
+    console.log("[DEBUG] Submitting report form");
+    for (let pair of formData.entries()) {
+        if (pair[0] === "file") {
+            console.log("[DEBUG] FormData key:", pair[0], "→", pair[1].name, "(", pair[1].size, "bytes)");
+        } else {
+            console.log("[DEBUG] FormData key:", pair[0], "→", pair[1]);
+        }
+    }
+
+    try {
+        const response = await fetch("/submit_report", {
+            method: "POST",
+            body: formData
+        });
+
+        console.log("[DEBUG] Response status:", response.status);
+
+        let responseBody = null;
+        try {
+            responseBody = await response.json();
+            console.log("[DEBUG] Response body:", responseBody);
+        } catch (parseErr) {
+            console.log("[DEBUG] Could not parse response as JSON");
+        }
+
+        if(response.ok){
+            successMsg.style.color = "#b6ffb3";
+            successMsg.innerText = "Report submitted successfully!";
+            document.getElementById("reportForm").reset();
+        } else {
+            successMsg.style.color = "#ffb3b3";
+            let errorMsg = "Error occurred";
+            if (responseBody && responseBody.detail) {
+                if (Array.isArray(responseBody.detail)) {
+                    errorMsg = responseBody.detail.map(function(err) { return err.msg || JSON.stringify(err); }).join("; ");
+                } else {
+                    errorMsg = responseBody.detail;
+                }
+            }
+            successMsg.innerText = errorMsg;
+            console.log("[DEBUG] Validation errors:", errorMsg);
+        }
+
+    } catch (error) {
+        successMsg.style.color = "#ffb3b3";
+        successMsg.innerText = "Server not reachable";
+        console.log("[DEBUG] Fetch error:", error);
+    }
+});
+
+// ========== RIGHTS PANEL TOGGLES ==========
+function toggleRightsItem(el) {
+    el.classList.toggle('expanded');
+}
+
+function toggleLawItem(el) {
+    const wasExpanded = el.classList.contains('expanded');
+    document.querySelectorAll('.laws-mini-list li.expanded').forEach(function(item) {
+        item.classList.remove('expanded');
+    });
+    if (!wasExpanded) {
+        el.classList.add('expanded');
+    }
+}
+
+// ========== MOBILE PANEL TOGGLES ==========
+function toggleMobilePanel(id) {
+    var panel = document.getElementById(id);
+    var toggle = panel.previousElementSibling;
+    if (toggle && toggle.classList.contains('mobile-panel-toggle')) {
+        toggle.classList.toggle('active');
+    }
+    panel.classList.toggle('mobile-open');
+}
+
+// ========== EMBEDDED ASSISTANT LOGIC ==========
+var REPORT_LANG = 'en';
+
+var REPORT_FAQ = [
+    { q_en:'Why should I report if I am a VAWC victim?', q_tl:'Bakit kailangan mag-report kung biktima ng VAWC?',
+      a_en:'Reporting VAWC is crucial because it helps stop the abuse, protects potential future victims, and holds abusers accountable. Your report can be the first step toward justice and healing.',
+      a_tl:'Mahalaga ang mag-report ng VAWC dahil nakakatulong ito na matigil ang pang-aabuso at managot ang nang-aabuso. Ang iyong report ay unang hakbang tungo sa katarungan at paggaling.' },
+    { q_en:'What is VAWC?', q_tl:'Ano ang VAWC?',
+      a_en:'VAWC stands for Violence Against Women and Children. It refers to any act of gender-based violence that results in physical, sexual, psychological, or economic harm. Under RA 9262, these acts are punishable by law.',
+      a_tl:'Ang VAWC ay Violence Against Women and Children o Karahasan Laban sa Kababaihan at Bata. Ito ay anumang karahasang nagdudulot ng physical, sexual, psychological, o economic na pinsala. Sa ilalim ng RA 9262, may parusa ang mga gawaing ito.' },
+    { q_en:'Is reporting confidential?', q_tl:'Confidential ba ang pag-report?',
+      a_en:'Yes. Your report and identity are kept confidential under Philippine law. Barangay officials, police, and social workers are required to protect your privacy.',
+      a_tl:'Oo. Ang iyong report at pagkakakilanlan ay mananatiling confidential sa ilalim ng batas. Ang mga opisyal ng barangay, pulis, at social worker ay protektado ang iyong privacy.' },
+    { q_en:'What protection do I get?', q_tl:'Anong proteksyon ang makukuha ko?',
+      a_en:'You can get: (1) Barangay Protection Orders (BPO) — effective immediately, (2) Temporary/Permanent Protection Orders from court, (3) Free legal aid from PAO, (4) Medical treatment and counseling, (5) Temporary shelter from DSWD. In emergencies, call 911.',
+      a_tl:'Makukuha mo ang: (1) Barangay Protection Order (BPO) — agad na may bisa, (2) Temporary/Permanent Protection Orders mula sa korte, (3) Libreng legal aid mula sa PAO, (4) Medical treatment at counseling, (5) Temporary shelter mula sa DSWD. Sa emergency, tumawag sa 911.' }
+];
+
+function toggleReportLang(lang) {
+    REPORT_LANG = lang;
+    document.querySelectorAll('.lang-opt').forEach(function(el) {
+        el.classList.toggle('active', el.getAttribute('data-lang') === lang);
+    });
+    loadReportFaq();
+}
+
+function loadReportFaq() {
+    var c = document.getElementById('reportFaqList');
+    if (!c) return;
+    c.innerHTML = '';
+    REPORT_FAQ.forEach(function(item) {
+        var el = document.createElement('div');
+        el.className = 'faq-mini-item';
+        var q = document.createElement('div');
+        q.className = 'faq-mini-q';
+        q.textContent = REPORT_LANG === 'tl' ? item.q_tl : item.q_en;
+        var a = document.createElement('div');
+        a.className = 'faq-mini-a';
+        a.textContent = REPORT_LANG === 'tl' ? item.a_tl : item.a_en;
+        el.appendChild(q);
+        el.appendChild(a);
+        el.addEventListener('click', function() {
+            var act = el.classList.contains('active');
+            c.querySelectorAll('.faq-mini-item.active').forEach(function(o) { o.classList.remove('active'); });
+            if (!act) el.classList.add('active');
+        });
+        c.appendChild(el);
+    });
+}
+
+function getReportResponse(question, lang) {
+    var msg = question.toLowerCase().trim();
+    if (!msg) return lang === 'tl' ? 'Paano kita matutulungan?' : 'How can I help you?';
+    var KB = [
+        { kw:['report','reporting','file','submit','magreport','sumbong','isumbong','ireport'], en:'To report VAWC, go to your barangay hall and speak with the VAWC Desk officer, visit the nearest PNP WCPD, or contact DSWD. All reports are kept confidential.', tl:'Para mag-report ng VAWC, pumunta sa barangay hall at makipag-usap sa VAWC Desk officer, pumunta sa PNP WCPD, o tumawag sa DSWD. Lahat ng report ay confidential.' },
+        { kw:['abuse','abusive','abused','hurt','hit','beat','abuso','inaabuso','sinasaktan','saktan'], en:'Abuse is never your fault. Whether physical, emotional, sexual, or economic — you deserve to be safe. Report to your barangay, PNP WCPD, or DSWD. Help is available.', tl:'Hindi mo kasalanan ang pang-aabuso. Kahit physical, emotional, sexual, o economic — nararapat kang maging ligtas. I-report sa barangay, PNP WCPD, o DSWD. Nariyan ang tulong.' },
+        { kw:['violence','violent','karahasan','marahas'], en:'Violence in any form is not acceptable. Under RA 9262, acts against women and children are punishable by law. Reach out to your barangay or call 911.', tl:'Ang karahasan ay hindi katanggap-tanggap. Sa ilalim ng RA 9262, may parusa ang karahasan laban sa kababaihan at bata. Makipag-ugnayan sa barangay o tumawag sa 911.' },
+        { kw:['legal','rights','law','lawyer','attorney','court','karapatan','abogado','pao','demanda'], en:'Victims have rights: protection orders (BPO/TPO/PPO), free legal aid from PAO, confidentiality, and the right to pursue legal action. Barangay officials can assist you.', tl:'Ang mga biktima ay may karapatan: protection orders, libreng legal aid mula sa PAO, confidentiality, at karapatang magsampa ng kaso. Tutulungan ka ng barangay.' },
+        { kw:['protection','protection order','bpo','tpo','ppo','safe','proteksyon','protektado'], en:'Protection orders prohibit the abuser from harming or approaching you. Barangay Protection Orders (BPO) take effect immediately. Court issues TPO and PPO.', tl:'Ipinagbabawal ng protection order ang nang-aabuso na saktan ka. Ang BPO ay agad na may bisa. Ang TPO at PPO ay ibinibigay ng korte.' },
+        { kw:['barangay','kagawad','kapitan'], en:'Your barangay is your first step. Visit the Barangay VAWC Desk and ask for a BPO if in danger. They can refer you to DSWD, PNP, and other agencies.', tl:'Ang barangay ang unang hakbang. Pumunta sa Barangay VAWC Desk at humingi ng BPO kung nasa panganib. Ire-refer ka nila sa DSWD, PNP, at iba pa.' },
+        { kw:['emergency','urgent','danger','911','saklolo','delikado'], en:'If in immediate danger, call 911 or go to the nearest barangay hall or police station. Contact PNP WCPD at 0919-777-7377 for 24/7 help.', tl:'Kung nasa agarang panganib, tumawag sa 911 o pumunta sa barangay hall o police station. Tawagan ang PNP WCPD sa 0919-777-7377.' },
+        { kw:['confidential','confidentiality','private','anonymous','lihim','seguridad'], en:'Your report and identity are confidential under Philippine law. Barangay officials, police, and social workers must keep your information private.', tl:'Ang iyong report at pagkakakilanlan ay confidential. Ang mga opisyal ng barangay, pulis, at social worker ay dapat panatilihing pribado ang iyong impormasyon.' },
+        { kw:['shelter','tirahan','safe house','ligtas','masisilungan'], en:'DSWD provides temporary shelter and psychosocial support. Your barangay can help coordinate transportation and referral.', tl:'Ang DSWD ay nagbibigay ng temporary shelter at psychosocial support. Ang barangay ay makakatulong sa transportasyon at referral.' },
+        { kw:['children','child','minor','bata','anak','menor'], en:'Children have special protection under RA 9262 and RA 7610. Minors can report abuse with or without a guardian. DSWD provides immediate care.', tl:'Ang mga bata ay protektado sa ilalim ng RA 9262 at RA 7610. Pwedeng mag-report ang menor de edad kahit walang magulang. Ang DSWD ay nagbibigay ng agarang tulong.' },
+        { kw:['financial','economic','money','sustento','pera','pinansyal'], en:'Economic abuse — withholding support, controlling money, or preventing work — is recognized under RA 9262. The court can order support payments.', tl:'Ang economic abuse — pagpigil ng sustento, pagkontrol ng pera — ay kinikilala sa ilalim ng RA 9262. Ang korte ay maaaring mag-utos ng sustento.' },
+        { kw:['emotional abuse','psychological','verbal','gaslighting','damdamin'], en:'Emotional and psychological abuse is real and punishable under RA 9262. Includes threats, intimidation, humiliation, and controlling behavior.', tl:'Ang emotional at psychological abuse ay totoo at may parusa. Kasama rito ang pananakot, pagpapahiya, at pagkontrol. May karapatan kang mag-report.' },
+        { kw:['physical abuse','physical','pananakit','suntok','sipa','nasaktan'], en:'Physical abuse is serious. Seek medical attention at any government hospital (free treatment). Report to your barangay or the police.', tl:'Malubha ang physical abuse. Humingi ng medical attention sa government hospital (libre). I-report sa barangay o pulis.' },
+        { kw:['harassment','stalking','bastos','catcalling','bastosin'], en:'Harassment and stalking are prohibited under RA 11313 (Safe Spaces Act) and RA 9262. Report to your barangay or PNP WCPD.', tl:'Ipinagbabawal ang harassment at stalking sa ilalim ng RA 11313 at RA 9262. I-report sa barangay o PNP WCPD.' },
+        { kw:['threat','threats','pananakot','binantaan','pinagbabantaan'], en:'Threats are a serious form of abuse under RA 9262. Report to your barangay and request a BPO immediately.', tl:'Malubhang pang-aabuso ang pananakot. I-report sa barangay at humingi agad ng BPO.' },
+        { kw:['control','controlling','kinokontrol','pagkontrol','manipulate'], en:'Controlling behavior is psychological abuse. Includes restricting freedom and isolating you from others. You have the right to your own freedom.', tl:'Ang pagkontrol ay psychological abuse. May karapatan ka sa iyong sariling kalayaan.' },
+        { kw:['ano','paano','gawin','gagawin','what to do','saan','ano ang'], en:'Steps: 1) If in danger, call 911. 2) Visit Barangay VAWC Desk. 3) File a BPO. 4) Contact DSWD or PNP WCPD. 5) Do not blame yourself.', tl:'Mga hakbang: 1) Kung nasa panganib, tumawag sa 911. 2) Pumunta sa Barangay VAWC Desk. 3) Humingi ng BPO. 4) Tawagan ang DSWD o PNP WCPD. 5) Huwag sisihin ang sarili.' },
+        { kw:['support','tulong','help','aid','emotional'], en:'You are not alone. Reach out to DSWD for psychosocial support or talk to a trusted friend or family member. You deserve to be heard.', tl:'Hindi ka nag-iisa. Makipag-ugnayan sa DSWD o makipag-usap sa pinagkakatiwalaang kaibigan. Karapat-dapat kang pakinggan.' }
+    ];
+    var bestScore = 0, best = null;
+    for (var i = 0; i < KB.length; i++) {
+        for (var j = 0; j < KB[i].kw.length; j++) {
+            var kw = KB[i].kw[j];
+            if (msg.indexOf(kw) !== -1 && kw.length > bestScore) { bestScore = kw.length; best = lang === 'tl' ? KB[i].tl : KB[i].en; }
+        }
+    }
+    if (best) return best;
+    return lang === 'tl' ? 'Paumanhin, ang VAWC Assistant ay makakatulong lamang sa mga tanong tungkol sa VAWC, pang-aabuso, pag-report, legal na karapatan, at proteksyon. Paano kita matutulungan?' : 'I can only assist with VAWC-related concerns. Please ask about reporting abuse, legal rights, protection orders, or support services. How can I help you?';
+}
+
+function sendReportMessage() {
+    var input = document.getElementById('reportChatInput');
+    var container = document.getElementById('reportChatMsgs');
+    if (!input || !container) return;
+    var text = input.value.trim();
+    if (!text) return;
+    input.value = '';
+
+    var userMsg = document.createElement('div');
+    userMsg.className = 'chat-msg user';
+    userMsg.innerHTML = '<div class="chat-msg-text">' + text.replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]||m;}) + '</div>';
+    container.appendChild(userMsg);
+    container.scrollTop = container.scrollHeight;
+
+    setTimeout(function() {
+        var reply = getReportResponse(text, REPORT_LANG);
+        var botMsg = document.createElement('div');
+        botMsg.className = 'chat-msg bot';
+        botMsg.innerHTML = '<div class="chat-msg-text">' + reply.replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]||m;}) + '</div>';
+        container.appendChild(botMsg);
+        container.scrollTop = container.scrollHeight;
+    }, 600 + Math.random() * 600);
+}
+
+function updateReportGreeting() {
+    var el = document.getElementById('reportChatGreeting');
+    if (el) {
+        if (REPORT_LANG === 'tl') {
+            el.textContent = 'Kumusta! Ako ang iyong VAWC Assistant. Magtanong tungkol sa VAWC, iyong mga karapatan, o saan makakuha ng tulong.';
+        } else {
+            el.textContent = 'Hello! I am your VAWC Assistant. Ask me about VAWC, your rights, or where to get help.';
+        }
+    }
+}
+
+var origToggleReportLang = toggleReportLang;
+toggleReportLang = function(lang) {
+    origToggleReportLang(lang);
+    updateReportGreeting();
+};
+
+// Init FAQ
+loadReportFaq();
+</script>
+
 </body>
 </html>

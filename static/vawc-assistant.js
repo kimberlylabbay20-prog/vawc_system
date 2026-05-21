@@ -487,3 +487,246 @@
   }
 
 })();
+
+/* ============================================
+   DASHBOARD VAWC ASSISTANT FUNCTIONS
+   Global — used by dashboard.html inline script
+   ============================================ */
+
+var DASH_LANG = 'en';
+
+var DASH_FAQ_DATA = [
+  {
+    q_en: 'Why should I report if I am a VAWC victim?',
+    q_tl: 'Bakit kailangan mag-report kung biktima ng VAWC?',
+    a_en: 'Reporting VAWC is crucial because it helps stop the abuse, protects potential future victims, and holds abusers accountable. Your report can be the first step toward justice and healing — not just for yourself, but for others in your community who may be suffering in silence. You have the right to protection and support.',
+    a_tl: 'Mahalaga ang mag-report ng VAWC dahil nakakatulong ito na matigil ang pang-aabuso, maprotektahan ang iba pang posibleng biktima, at managot ang nang-aabuso. Ang iyong report ay maaaring unang hakbang tungo sa katarungan at paggaling — hindi lang para sa iyo, kundi para sa iba sa iyong komunidad na tahimik na nagdurusa. May karapatan kang maprotektahan at makakuha ng suporta.'
+  },
+  {
+    q_en: 'What is VAWC?',
+    q_tl: 'Ano ang VAWC?',
+    a_en: 'VAWC stands for Violence Against Women and Children. It refers to any act of gender-based violence that results in physical, sexual, psychological, or economic harm to women and children. This includes battery, threats, harassment, emotional abuse, economic control, and stalking. Under RA 9262, these acts are punishable by law.',
+    a_tl: 'Ang VAWC ay Violence Against Women and Children o Karahasan Laban sa Kababaihan at Mga Bata. Ito ay tumutukoy sa anumang gawaing may karahasan na nagdudulot ng physical, sexual, psychological, o economic na pinsala sa kababaihan at bata. Kasama rito ang pananakit, pananakot, harassment, emotional abuse, pagkontrol, at stalking. Sa ilalim ng RA 9262, ang mga gawaing ito ay may parusa sa batas.'
+  },
+  {
+    q_en: 'Is reporting confidential?',
+    q_tl: 'Confidential ba ang pag-report?',
+    a_en: 'Yes. Your report and identity are kept confidential under Philippine law (RA 9262 and other statutes). Barangay officials, police, and social workers are required to protect your privacy. Your information will only be shared with authorized personnel handling your case.',
+    a_tl: 'Oo. Ang iyong report at pagkakakilanlan ay mananatiling confidential sa ilalim ng batas ng Pilipinas (RA 9262 at iba pang batas). Ang mga opisyal ng barangay, pulis, at social worker ay kinakailangang protektahan ang iyong privacy. Ang iyong impormasyon ay ibabahagi lamang sa mga awtorisadong tauhan na humahawak ng iyong kaso.'
+  },
+  {
+    q_en: 'What support can I get?',
+    q_tl: 'Anong tulong ang makukuha ko?',
+    a_en: 'Victims of VAWC can get: (1) Protection Orders (BPO/TPO/PPO) to stop the abuser, (2) Free legal assistance from the Public Attorney\'s Office (PAO), (3) Medical treatment and counseling from government hospitals and DSWD, (4) Temporary shelter from DSWD, (5) Barangay assistance and referral to other agencies. In emergencies, call 911.',
+    a_tl: 'Ang mga biktima ng VAWC ay makakakuha ng: (1) Protection Orders (BPO/TPO/PPO) para mapigilan ang nang-aabuso, (2) Libreng legal na tulong mula sa Public Attorney\'s Office (PAO), (3) Medical treatment at counseling mula sa government hospitals at DSWD, (4) Temporary shelter mula sa DSWD, (5) Tulong ng barangay at referral sa ibang ahensya. Sa emergency, tumawag sa 911.'
+  }
+];
+
+/* ---------- TOGGLE POPUP ---------- */
+function toggleVAWCAssistant() {
+  var popup = document.getElementById('dashAssistantPopup');
+  var fab = document.getElementById('dashAssistantFab');
+  if (!popup || !fab) return;
+  popup.classList.toggle('active');
+  if (popup.classList.contains('active')) {
+    setTimeout(function() { document.getElementById('dashChatInput').focus(); }, 400);
+  }
+}
+
+/* ---------- LOAD FAQ ---------- */
+function loadFAQAnswer() {
+  var container = document.getElementById('dashFaqList');
+  if (!container) return;
+  container.innerHTML = '';
+  DASH_FAQ_DATA.forEach(function(item) {
+    var el = document.createElement('div');
+    el.className = 'dash-faq-item';
+
+    var qEl = document.createElement('div');
+    qEl.className = 'dash-faq-q';
+    qEl.textContent = DASH_LANG === 'tl' ? item.q_tl : item.q_en;
+
+    var aEl = document.createElement('div');
+    aEl.className = 'dash-faq-a';
+    aEl.textContent = DASH_LANG === 'tl' ? item.a_tl : item.a_en;
+
+    el.appendChild(qEl);
+    el.appendChild(aEl);
+
+    el.addEventListener('click', function() {
+      var wasActive = el.classList.contains('active');
+      container.querySelectorAll('.dash-faq-item.active').forEach(function(other) {
+        other.classList.remove('active');
+      });
+      if (!wasActive) {
+        el.classList.add('active');
+      }
+    });
+
+    container.appendChild(el);
+  });
+}
+
+/* ---------- LANGUAGE TOGGLE ---------- */
+function toggleLanguage(lang) {
+  DASH_LANG = lang;
+  document.querySelectorAll('.dash-lang-opt').forEach(function(el) {
+    el.classList.toggle('active', el.getAttribute('data-lang') === lang);
+  });
+  loadFAQAnswer();
+}
+
+/* ---------- CHATBOT RESPONSE ---------- */
+function getVAWCResponse(question, lang) {
+  var msg = question.toLowerCase().trim();
+  if (!msg) return lang === 'tl' ? 'Paano kita matutulungan?' : 'How can I help you?';
+
+  var KB = [
+    {
+      keywords: ['report', 'reporting', 'file', 'submit', 'how to report', 'magreport', 'sumbong', 'isumbong', 'ireport'],
+      en: 'To report VAWC, go to your barangay hall and speak with the VAWC Desk officer, visit the nearest PNP WCPD, or contact DSWD. You may also file a report online. All reports are kept confidential.',
+      tl: 'Para mag-report ng VAWC, pumunta sa inyong barangay hall at makipag-usap sa VAWC Desk officer, pumunta sa PNP WCPD, o tumawag sa DSWD. Pwede ka ring mag-report online. Lahat ng report ay confidential.'
+    },
+    {
+      keywords: ['abuse', 'abusive', 'abused', 'hurt', 'hit', 'beat', 'abuso', 'inaabuso', 'sinasaktan', 'saktan'],
+      en: 'Abuse is never your fault. Whether physical, emotional, sexual, or economic — you deserve to be safe. Report VAWC cases to your barangay, PNP WCPD, or DSWD. Help is available, and you have legal rights to protection.',
+      tl: 'Hindi mo kasalanan ang pang-aabuso. Kahit ito ay physical, emotional, sexual, o economic abuse — nararapat kang maging ligtas. I-report ang VAWC sa iyong barangay, PNP WCPD, o DSWD. Nariyan ang tulong, at may karapatan kang maprotektahan.'
+    },
+    {
+      keywords: ['violence', 'violent', 'karahasan', 'marahas'],
+      en: 'Violence in any form is not acceptable. Under RA 9262, physical, sexual, psychological, and economic violence against women and children are punishable by law. Reach out to your barangay or call 911 in emergencies.',
+      tl: 'Ang karahasan sa anumang anyo ay hindi katanggap-tanggap. Sa ilalim ng RA 9262, ang physical, sexual, psychological, at economic violence laban sa kababaihan at bata ay may parusa sa batas. Makipag-ugnayan sa iyong barangay o tumawag sa 911 kung emergency.'
+    },
+    {
+      keywords: ['legal', 'rights', 'law', 'lawyer', 'attorney', 'court', 'case', 'karapatan', 'abogado', 'pao'],
+      en: 'Victims have rights: protection orders (BPO/TPO/PPO), free legal assistance from PAO, confidentiality, and the right to pursue legal action. You do not need a lawyer to start — barangay officials can assist you.',
+      tl: 'Ang mga biktima ay may karapatan: protection orders (BPO/TPO/PPO), libreng legal na tulong mula sa PAO, confidentiality, at karapatang magsampa ng kaso. Hindi mo kailangan ng abogado para magsimula — tutulungan ka ng barangay.'
+    },
+    {
+      keywords: ['protection', 'protection order', 'bpo', 'tpo', 'ppo', 'safe', 'safety', 'proteksyon'],
+      en: 'Protection orders prohibit the abuser from harming or approaching you. Barangay Protection Orders (BPO) take effect immediately. Temporary (TPO) and Permanent (PPO) orders are issued by the court.',
+      tl: 'Ang protection order ay nagbabawal sa nang-aabuso na saktan o lapitan ka. Ang Barangay Protection Order (BPO) ay agad na may bisa. Ang Temporary (TPO) at Permanent (PPO) ay ibinibigay ng korte.'
+    },
+    {
+      keywords: ['barangay', 'kagawad', 'kapitan', 'barangay hall'],
+      en: 'Your barangay is your first step. Visit the Barangay VAWC Desk and ask for a Barangay Protection Order (BPO) if you are in danger. They can also refer you to DSWD, PNP, and other agencies.',
+      tl: 'Ang iyong barangay ang unang hakbang. Pumunta sa Barangay VAWC Desk at humingi ng Barangay Protection Order (BPO) kung ikaw ay nasa panganib. Maaari ka rin nilang i-refer sa DSWD, PNP, at iba pang ahensya.'
+    },
+    {
+      keywords: ['emergency', 'urgent', 'danger', '911', 'immediate', 'help now', 'saklolo', 'delikado'],
+      en: 'If you are in immediate danger, call 911 or go to your nearest barangay hall or police station right away. Contact PNP WCPD at 0919-777-7377 for 24/7 assistance.',
+      tl: 'Kung nasa agarang panganib, tumawag sa 911 o pumunta agad sa pinakamalapit na barangay hall o police station. Tawagan ang PNP WCPD sa 0919-777-7377 para sa 24/7 na tulong.'
+    },
+    {
+      keywords: ['confidential', 'confidentiality', 'private', 'anonymous', 'lihim', 'seguridad'],
+      en: 'Your report and identity are confidential under Philippine law. Barangay officials, police, and social workers are legally required to keep your information private.',
+      tl: 'Ang iyong report at pagkakakilanlan ay confidential sa ilalim ng batas. Ang mga opisyal ng barangay, pulis, at social worker ay legal na kinakailangang panatilihing pribado ang iyong impormasyon.'
+    },
+    {
+      keywords: ['shelter', 'tirahan', 'safe house', 'ligtas', 'masisilungan'],
+      en: 'If you need a safe place to stay, DSWD provides temporary shelter and psychosocial support. Your barangay can help coordinate transportation and referral.',
+      tl: 'Kung kailangan mo ng ligtas na matutuluyan, ang DSWD ay nagbibigay ng temporary shelter at psychosocial support. Ang iyong barangay ay makakatulong sa transportasyon at referral.'
+    },
+    {
+      keywords: ['support', 'tulong', 'help', 'aid', 'emotional'],
+      en: 'You are not alone. Reach out to DSWD for psychosocial support, talk to a trusted friend or family member, or contact a local women\'s organization. You deserve to be heard.',
+      tl: 'Hindi ka nag-iisa. Makipag-ugnayan sa DSWD para sa psychosocial support, makipag-usap sa pinagkakatiwalaang kaibigan o kapamilya. Karapat-dapat kang pakinggan.'
+    },
+    {
+      keywords: ['children', 'child', 'minor', 'bata', 'anak', 'menor'],
+      en: 'Children have special protection under RA 9262 and RA 7610. Minors can report abuse with or without a guardian. DSWD provides immediate intervention and care.',
+      tl: 'Ang mga bata ay may espesyal na proteksyon sa ilalim ng RA 9262 at RA 7610. Pwedeng mag-report ang mga menor de edad kahit walang kasamang magulang. Ang DSWD ay nagbibigay ng agarang tulong.'
+    },
+    {
+      keywords: ['financial', 'economic', 'money', 'support', 'sustento', 'pera', 'pinansyal'],
+      en: 'Economic abuse — withholding financial support, controlling money, or preventing you from working — is recognized under RA 9262. The court can order support payments.',
+      tl: 'Ang economic abuse — pagpigil ng sustento, pagkontrol ng pera, o pagbawal sa iyo na magtrabaho — ay kinikilala sa ilalim ng RA 9262. Ang korte ay maaaring mag-utos ng sustento.'
+    },
+    {
+      keywords: ['emotional abuse', 'psychological', 'verbal', 'gaslighting', 'damdamin'],
+      en: 'Emotional and psychological abuse is real and punishable under RA 9262. This includes threats, intimidation, humiliation, and controlling behavior. You have the right to report it.',
+      tl: 'Ang emotional at psychological abuse ay totoo at may parusa sa ilalim ng RA 9262. Kasama rito ang pananakot, pagpapahiya, at pagkontrol. May karapatan kang mag-report.'
+    },
+    {
+      keywords: ['physical abuse', 'physical', 'hitting', 'pananakit', 'suntok', 'sipa'],
+      en: 'Physical abuse is serious. Seek medical attention immediately at any government hospital (free treatment). Report the incident to your barangay or the police.',
+      tl: 'Malubha ang physical abuse. Agad na humingi ng medical attention sa anumang government hospital (libreng gamutan). I-report ang insidente sa barangay o pulis.'
+    },
+    {
+      keywords: ['harassment', 'stalking', 'bastos', 'catcalling', 'bastosin'],
+      en: 'Harassment and stalking are prohibited under RA 11313 (Safe Spaces Act) and RA 9262. Report to your barangay or PNP WCPD.',
+      tl: 'Ang harassment at stalking ay ipinagbabawal sa ilalim ng RA 11313 (Safe Spaces Act) at RA 9262. I-report sa barangay o PNP WCPD.'
+    },
+    {
+      keywords: ['threat', 'threats', 'pananakot', 'binantaan', 'pinagbabantaan'],
+      en: 'Threats are a serious form of abuse under RA 9262. Report to your barangay and request a Barangay Protection Order (BPO) immediately.',
+      tl: 'Ang pananakot ay malubhang uri ng pang-aabuso. I-report sa barangay at humingi agad ng Barangay Protection Order (BPO).'
+    },
+    {
+      keywords: ['control', 'controlling', 'kinokontrol', 'pagkontrol', 'manipulate'],
+      en: 'Controlling behavior is a form of psychological abuse. This includes restricting freedom, isolating you from others, and making all decisions for you. You have the right to your own freedom.',
+      tl: 'Ang pagkontrol ay isang uri ng psychological abuse. Kasama rito ang pagpigil ng kalayaan at paghihiwalay sa iyo sa iba. May karapatan ka sa iyong sariling kalayaan.'
+    },
+    {
+      keywords: ['ano', 'paano', 'gawin', 'gagawin', 'what to do', 'saan', 'ano ang'],
+      en: 'Steps you can take: 1) If in danger, call 911. 2) Visit your Barangay VAWC Desk. 3) File a BPO. 4) Contact DSWD or PNP WCPD. 5) Do not blame yourself — you deserve support.',
+      tl: 'Mga hakbang: 1) Kung nasa panganib, tumawag sa 911. 2) Pumunta sa Barangay VAWC Desk. 3) Humingi ng BPO. 4) Tawagan ang DSWD o PNP WCPD. 5) Huwag sisihin ang sarili — karapat-dapat kang tumanggap ng suporta.'
+    }
+  ];
+
+  var bestScore = 0;
+  var bestResponse = null;
+
+  for (var i = 0; i < KB.length; i++) {
+    var entry = KB[i];
+    for (var j = 0; j < entry.keywords.length; j++) {
+      var kw = entry.keywords[j];
+      if (msg.indexOf(kw) !== -1) {
+        if (kw.length > bestScore) {
+          bestScore = kw.length;
+          bestResponse = lang === 'tl' ? entry.tl : entry.en;
+        }
+      }
+    }
+  }
+
+  if (bestResponse) return bestResponse;
+
+  return lang === 'tl'
+    ? 'Paumanhin, ngunit ang VAWC Assistant ay makakatulong lamang sa mga tanong tungkol sa VAWC, pang-aabuso, pag-report, legal na karapatan, proteksyon, at suporta para sa biktima. Paano kita matutulungan?'
+    : 'I can only assist with VAWC-related concerns. Please ask about reporting abuse, legal rights, protection orders, safety, or support services. How can I help you?';
+}
+
+/* ---------- SEND CHAT MESSAGE ---------- */
+function sendVAWCMessage() {
+  var input = document.getElementById('dashChatInput');
+  var container = document.getElementById('dashChatMessages');
+  if (!input || !container) return;
+
+  var text = input.value.trim();
+  if (!text) return;
+
+  input.value = '';
+
+  var userMsg = document.createElement('div');
+  userMsg.className = 'dash-msg dash-msg-user';
+  userMsg.innerHTML = '<div class="dash-msg-text">' + escapeHtml(text) + '</div>';
+  container.appendChild(userMsg);
+  container.scrollTop = container.scrollHeight;
+
+  setTimeout(function() {
+    var reply = getVAWCResponse(text, DASH_LANG);
+    var botMsg = document.createElement('div');
+    botMsg.className = 'dash-msg dash-msg-bot';
+    botMsg.innerHTML = '<div class="dash-msg-text">' + escapeHtml(reply) + '</div>';
+    container.appendChild(botMsg);
+    container.scrollTop = container.scrollHeight;
+  }, 600 + Math.random() * 600);
+}
+
+/* ---------- HELPER ---------- */
+function escapeHtml(str) {
+  var div = document.createElement('div');
+  div.appendChild(document.createTextNode(str));
+  return div.innerHTML;
+}

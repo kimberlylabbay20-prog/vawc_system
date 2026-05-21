@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Barangay VAWC Case Management System</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="/static/vawc-assistant.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f0f2f5; color: #2c3e50; }
@@ -143,6 +145,27 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f0f2f5; colo
 .stat-icon.orange { background: #fef3e2; color: var(--warning); }
 .stat-icon.purple { background: #f0e8fd; color: #8e44ad; }
 .stat-icon.teal { background: #e8f8f5; color: #1abc9c; }
+.stat-card.clickable { cursor: pointer; transition: box-shadow 0.2s; }
+.stat-card.clickable:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.12); }
+
+/* Analytics tabs & insights */
+.analytics-tabs { display: flex; gap: 4px; margin-bottom: 16px; flex-wrap: wrap; }
+.analytics-tab {
+  padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s; background: #f0f2f5; color: var(--text-light);
+  user-select: none;
+}
+.analytics-tab:hover { background: #e4e7ea; }
+.analytics-tab.active { background: var(--accent); color: #fff; }
+.analytics-insights {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 8px; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border);
+}
+.insight-card {
+  background: #f8f9fa; border-radius: 8px; padding: 10px 14px;
+}
+.insight-card .insight-value { font-size: 20px; font-weight: 700; color: var(--text); line-height: 1.2; }
+.insight-card .insight-label { font-size: 11px; color: var(--text-light); margin-top: 4px; line-height: 1.3; }
 
 /* Dashboard grid */
 .dashboard-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; }
@@ -386,9 +409,21 @@ tr.clickable { cursor: pointer; }
       <div class="page-section active" id="viewDashboard">
         <div class="stats-grid" id="statsGrid"></div>
         <div class="dashboard-grid">
-          <div class="chart-card">
-            <h3><i class="fas fa-calendar-alt" style="color:var(--accent)"></i> Monthly Cases</h3>
-            <div id="monthlyChart" class="bar-chart" style="height:160px;align-items:flex-end"></div>
+          <div class="chart-card" id="analyticsCard">
+            <div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:16px">
+              <h3 style="margin-bottom:0"><i class="fas fa-calendar-alt" style="color:var(--accent)"></i> Monthly Cases</h3>
+              <span style="font-size:12px;color:var(--text-light)">VAWC Case Analytics Overview</span>
+            </div>
+            <div class="analytics-tabs" id="analyticsTabs">
+              <span class="analytics-tab active" data-tab="monthly" onclick="filterAnalytics('monthly')">Monthly</span>
+              <span class="analytics-tab" data-tab="weekly" onclick="filterAnalytics('weekly')">Weekly</span>
+              <span class="analytics-tab" data-tab="urgent" onclick="filterAnalytics('urgent')">Urgent</span>
+              <span class="analytics-tab" data-tab="resolved" onclick="filterAnalytics('resolved')">Resolved</span>
+            </div>
+            <div style="position:relative;width:100%;min-height:180px">
+              <canvas id="analyticsChart"></canvas>
+            </div>
+            <div class="analytics-insights" id="analyticsInsights"></div>
           </div>
           <div class="chart-card">
             <h3><i class="fas fa-clock" style="color:var(--warning)"></i> Recent Activity</h3>
@@ -474,6 +509,46 @@ tr.clickable { cursor: pointer; }
   </main>
 </div>
 
+<!-- ============ VAWC ASSISTANT ============ -->
+<div class="dash-assistant-fab" id="dashAssistantFab" onclick="toggleVAWCAssistant()" title="VAWC Assistant">
+  <i class="fas fa-comment-dots"></i>
+  <span class="dash-fab-label">VAWC Assistant</span>
+</div>
+
+<div class="dash-assistant-popup" id="dashAssistantPopup">
+  <div class="dash-popup-header">
+    <div class="dash-popup-title">
+      <i class="fas fa-shield-halved"></i> VAWC Awareness
+    </div>
+    <div class="dash-lang-toggle">
+      <span class="dash-lang-opt active" data-lang="en" onclick="toggleLanguage('en')">EN</span>
+      <span class="dash-lang-div">|</span>
+      <span class="dash-lang-opt" data-lang="tl" onclick="toggleLanguage('tl')">TL</span>
+    </div>
+    <button class="dash-popup-close" onclick="toggleVAWCAssistant()">&times;</button>
+  </div>
+  <div class="dash-popup-body">
+    <div class="dash-faq-panel">
+      <div class="dash-faq-header">VAWC Awareness</div>
+      <div class="dash-faq-list" id="dashFaqList"></div>
+    </div>
+    <div class="dash-chat-panel">
+      <div class="dash-chat-header">
+        <i class="fas fa-robot"></i> Ask VAWC Assistant
+      </div>
+      <div class="dash-chat-msgs" id="dashChatMessages">
+        <div class="dash-msg dash-msg-bot">
+          <span class="dash-msg-text">Hello! I am your VAWC Assistant. Ask me anything about VAWC, your rights, or where to get help. / Ako ang iyong VAWC Assistant. Magtanong tungkol sa VAWC, iyong mga karapatan, o saan makakuha ng tulong.</span>
+        </div>
+      </div>
+      <div class="dash-chat-input-row">
+        <input type="text" id="dashChatInput" placeholder="Type a message..." onkeydown="if(event.key==='Enter') sendVAWCMessage()">
+        <button class="dash-chat-send" onclick="sendVAWCMessage()"><i class="fas fa-paper-plane"></i></button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ============ NOTIFICATION PANEL ============ -->
 <div class="modal-overlay" id="notifModal">
   <div class="modal">
@@ -493,6 +568,17 @@ tr.clickable { cursor: pointer; }
     <div class="modal-actions">
       <button class="btn btn-outline btn-sm" onclick="closeModal('actionModal')">Cancel</button>
       <button class="btn btn-primary btn-sm" id="actionModalConfirm" onclick="confirmAction()">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ DASHBOARD DETAIL MODAL ============ -->
+<div class="modal-overlay" id="dashboardModal">
+  <div class="modal" style="max-width:900px">
+    <h3 id="dashboardModalTitle"><i class="fas fa-folder"></i> All Cases</h3>
+    <div id="dashboardModalBody" style="overflow-x:auto"></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline btn-sm" onclick="closeModal('dashboardModal')">Close</button>
     </div>
   </div>
 </div>
@@ -581,6 +667,7 @@ async function initApp() {
     document.getElementById('userAvatar').textContent=initials;
   }
   await loadAllData();
+  initDashboardAssistant();
 }
 
 async function loadAllData() {
@@ -629,25 +716,17 @@ function closeModal(id) { document.getElementById(id).classList.remove('active')
 function renderDashboard(stats,monthly,activity) {
   const grid=document.getElementById('statsGrid');
   grid.innerHTML=`
-    <div class="stat-card"><div class="stat-icon blue"><i class="fas fa-folder"></i></div><div class="stat-info"><h4>${stats.total_cases}</h4><p>Total Cases</p></div></div>
-    <div class="stat-card"><div class="stat-icon orange"><i class="fas fa-spinner"></i></div><div class="stat-info"><h4>${stats.active_cases}</h4><p>Active Cases</p></div></div>
-    <div class="stat-card"><div class="stat-icon red"><i class="fas fa-exclamation-triangle"></i></div><div class="stat-info"><h4>${stats.urgent_cases}</h4><p>Urgent (HIGH)</p></div></div>
-    <div class="stat-card"><div class="stat-icon green"><i class="fas fa-check-circle"></i></div><div class="stat-info"><h4>${stats.resolved_cases}</h4><p>Resolved</p></div></div>
-    <div class="stat-card"><div class="stat-icon purple"><i class="fas fa-clock"></i></div><div class="stat-info"><h4>${stats.pending_cases}</h4><p>Pending</p></div></div>
-    <div class="stat-card"><div class="stat-icon teal"><i class="fas fa-users"></i></div><div class="stat-info"><h4>${stats.total_officers}</h4><p>Officers</p></div></div>
+    <div class="stat-card clickable" onclick="openDashboardModal('total')"><div class="stat-icon blue"><i class="fas fa-folder"></i></div><div class="stat-info"><h4>${stats.total_cases}</h4><p>Total Cases</p></div></div>
+    <div class="stat-card clickable" onclick="openDashboardModal('active')"><div class="stat-icon orange"><i class="fas fa-spinner"></i></div><div class="stat-info"><h4>${stats.active_cases}</h4><p>Active Cases</p></div></div>
+    <div class="stat-card clickable" onclick="openDashboardModal('urgent')"><div class="stat-icon red"><i class="fas fa-exclamation-triangle"></i></div><div class="stat-info"><h4>${stats.urgent_cases}</h4><p>Urgent (HIGH)</p></div></div>
+    <div class="stat-card clickable" onclick="openDashboardModal('resolved')"><div class="stat-icon green"><i class="fas fa-check-circle"></i></div><div class="stat-info"><h4>${stats.resolved_cases}</h4><p>Resolved</p></div></div>
+    <div class="stat-card clickable" onclick="openDashboardModal('pending')"><div class="stat-icon purple"><i class="fas fa-clock"></i></div><div class="stat-info"><h4>${stats.pending_cases}</h4><p>Pending</p></div></div>
+    <div class="stat-card clickable" onclick="openDashboardModal('officers')"><div class="stat-icon teal"><i class="fas fa-users"></i></div><div class="stat-info"><h4>${stats.total_officers}</h4><p>Officers</p></div></div>
   `;
 
-  // Monthly chart
-  const chart=document.getElementById('monthlyChart');
-  if(monthly.length>0) {
-    const max=Math.max(...monthly.map(m=>m.count),1);
-    chart.innerHTML=monthly.map(m=>
-      `<div style="flex:1;display:flex;flex-direction:column;align-items:center;height:100%;justify-content:flex-end">
-        <div class="bar" style="height:${(m.count/max)*120}px;background:var(--accent);width:70%"></div>
-        <div class="bar-label">${m.month}</div>
-      </div>`
-    ).join('');
-  } else { chart.innerHTML='<div style="color:var(--text-light);padding:40px;text-align:center;width:100%">No data yet</div>'; }
+  // Analytics chart
+  ANALYTICS_MONTHLY_DATA = monthly;
+  renderAnalyticsChart('monthly', monthly);
 
   // Activity feed
   const feed=document.getElementById('activityFeed');
@@ -663,6 +742,132 @@ function renderDashboard(stats,monthly,activity) {
       </div>`
     ).join('');
   } else { feed.innerHTML='<div style="color:var(--text-light);padding:20px;text-align:center">No recent activity</div>'; }
+}
+
+// ============ ANALYTICS ============
+var ANALYTICS_CHART = null;
+var ANALYTICS_MONTHLY_DATA = [];
+
+function getWeekStart(d) {
+  var date = new Date(d);
+  var day = date.getDay();
+  var diff = date.getDate() - day + (day === 0 ? -6 : 1);
+  return new Date(date.getFullYear(), date.getMonth(), diff);
+}
+
+function formatWeekLabel(d) {
+  var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return months[d.getMonth()] + ' ' + d.getDate();
+}
+
+function getWeeklyData() {
+  var weeks = {};
+  var now = new Date();
+  var eightWeeksAgo = new Date(now.getTime() - 56 * 24 * 60 * 60 * 1000);
+  CASES.forEach(function(c) {
+    if (!c.date_reported) return;
+    var d = new Date(c.date_reported);
+    if (d < eightWeeksAgo) return;
+    var ws = getWeekStart(d);
+    var key = ws.toISOString().slice(0, 10);
+    if (!weeks[key]) weeks[key] = { label: formatWeekLabel(ws), count: 0, sortKey: ws.getTime() };
+    weeks[key].count++;
+  });
+  return Object.values(weeks).sort(function(a, b) { return a.sortKey - b.sortKey; });
+}
+
+function getMonthlyBreakdown(filterFn) {
+  var monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var months = {};
+  CASES.forEach(function(c) {
+    if (filterFn && !filterFn(c)) return;
+    if (!c.date_reported) return;
+    var d = new Date(c.date_reported);
+    var key = monthNames[d.getMonth()] + ' ' + d.getFullYear();
+    if (!months[key]) months[key] = { label: monthNames[d.getMonth()], count: 0, sortKey: d.getFullYear() * 12 + d.getMonth() };
+    months[key].count++;
+  });
+  return Object.values(months).sort(function(a, b) { return a.sortKey - b.sortKey; });
+}
+
+function filterAnalytics(type) {
+  document.querySelectorAll('.analytics-tab').forEach(function(t) {
+    t.classList.toggle('active', t.getAttribute('data-tab') === type);
+  });
+  var data;
+  switch (type) {
+    case 'monthly': data = ANALYTICS_MONTHLY_DATA; break;
+    case 'weekly': data = getWeeklyData(); break;
+    case 'urgent': data = getMonthlyBreakdown(function(c) { return c.priority === 'HIGH'; }); break;
+    case 'resolved': data = getMonthlyBreakdown(function(c) { return c.status === 'Resolved'; }); break;
+    default: data = [];
+  }
+  renderAnalyticsChart(type, data);
+}
+
+function renderAnalyticsChart(type, data) {
+  var ctx = document.getElementById('analyticsChart');
+  if (!ctx || typeof Chart === 'undefined') return;
+  var labels = data.map(function(d) { return d.label || d.month; });
+  var values = data.map(function(d) { return d.count; });
+  var bgColors = { monthly: 'rgba(52,152,219,0.8)', weekly: 'rgba(52,152,219,0.8)', urgent: 'rgba(231,76,60,0.8)', resolved: 'rgba(39,174,96,0.8)' };
+  var borderColors = { monthly: 'rgba(52,152,219,1)', weekly: 'rgba(52,152,219,1)', urgent: 'rgba(231,76,60,1)', resolved: 'rgba(39,174,96,1)' };
+  var bg = bgColors[type] || 'rgba(52,152,219,0.8)';
+  var border = borderColors[type] || 'rgba(52,152,219,1)';
+  if (ANALYTICS_CHART) {
+    ANALYTICS_CHART.data.labels = labels;
+    ANALYTICS_CHART.data.datasets[0].data = values;
+    ANALYTICS_CHART.data.datasets[0].backgroundColor = bg;
+    ANALYTICS_CHART.data.datasets[0].borderColor = border;
+    ANALYTICS_CHART.update();
+    updateAnalyticsInsights(type, data);
+    return;
+  }
+  ANALYTICS_CHART = new Chart(ctx, {
+    type: 'bar',
+    data: { labels: labels, datasets: [{ label: type.charAt(0).toUpperCase() + type.slice(1), data: values, backgroundColor: bg, borderColor: border, borderWidth: 1, borderRadius: 4, barThickness: 'flex', maxBarThickness: 40 }] },
+    options: {
+      responsive: true, maintainAspectRatio: false, animation: { duration: 500, easing: 'easeOutQuart' },
+      plugins: {
+        legend: { display: false },
+        tooltip: { backgroundColor: 'rgba(44,62,80,0.9)', titleFont: { size: 13 }, bodyFont: { size: 12 }, padding: 10, cornerRadius: 8, callbacks: { label: function(ct) { return ct.parsed.y + ' case' + (ct.parsed.y !== 1 ? 's' : ''); } } }
+      },
+      scales: {
+        y: { beginAtZero: true, ticks: { precision: 0, font: { size: 11 }, color: '#7f8c8d' }, grid: { color: 'rgba(0,0,0,0.05)' } },
+        x: { ticks: { font: { size: 11 }, color: '#7f8c8d' }, grid: { display: false } }
+      }
+    }
+  });
+  updateAnalyticsInsights(type, data);
+}
+
+function updateAnalyticsInsights(type, data) {
+  var container = document.getElementById('analyticsInsights');
+  if (!container) return;
+  var insights = [];
+  var periodLabel = { monthly: 'month', weekly: 'week', urgent: 'month', resolved: 'month' };
+  var label = periodLabel[type] || 'period';
+  if (data.length > 0) {
+    var total = data.reduce(function(s, d) { return s + d.count; }, 0);
+    var avg = Math.round(total / data.length);
+    var maxItem = data.reduce(function(a, b) { return a.count > b.count ? a : b; });
+    insights.push({ value: maxItem.count, label: 'Highest ' + label + ': ' + (maxItem.label || maxItem.month) });
+    insights.push({ value: total, label: 'Total ' + type + ' cases' });
+    insights.push({ value: avg, label: 'Avg per ' + label });
+    if (data.length >= 2) {
+      var last = data[data.length - 1].count;
+      var prev = data[data.length - 2].count;
+      var pct = prev > 0 ? Math.round(((last - prev) / prev) * 100) : (last > 0 ? 100 : 0);
+      var dir = pct >= 0 ? 'increased' : 'decreased';
+      insights.push({ value: Math.abs(pct) + '%', label: dir + ' from previous ' + label });
+    }
+  } else {
+    insights.push({ value: '—', label: 'No data available for this view' });
+    insights.push({ value: '0', label: 'No matching records found' });
+  }
+  container.innerHTML = insights.map(function(i) {
+    return '<div class="insight-card"><div class="insight-value">' + i.value + '</div><div class="insight-label">' + i.label + '</div></div>';
+  }).join('');
 }
 
 // ============ CASES ============
@@ -936,6 +1141,90 @@ function toggleNotifications() {
   renderNotifications(); openModal('notifModal');
 }
 
+// ============ DASHBOARD CARD INTERACTIONS ============
+function openDashboardModal(type) {
+  var data = filterCasesByType(type);
+  var title = document.getElementById('dashboardModalTitle');
+  var body = document.getElementById('dashboardModalBody');
+  var titles = {
+    total: 'All Cases',
+    active: 'Active Cases',
+    urgent: 'Urgent (HIGH) Cases',
+    resolved: 'Resolved Cases',
+    pending: 'Pending Cases',
+    officers: 'Registered Officers'
+  };
+  var icon = type === 'officers' ? 'users' : 'folder';
+  title.innerHTML = '<i class="fas fa-' + icon + '" style="color:var(--accent)"></i> ' + (titles[type] || 'Cases') + ' <span style="font-size:14px;font-weight:400;color:var(--text-light)">(' + data.length + ')</span>';
+  if (type === 'officers') {
+    body.innerHTML = renderOfficersTable(data);
+  } else {
+    body.innerHTML = renderFilteredResults(data);
+  }
+  openModal('dashboardModal');
+}
+
+function filterCasesByType(type) {
+  switch (type) {
+    case 'total': return CASES;
+    case 'active': return CASES.filter(function(c) { return ['Submitted','Assigned','Ongoing','Monitoring'].indexOf(c.status) !== -1; });
+    case 'urgent': return CASES.filter(function(c) { return c.priority === 'HIGH'; });
+    case 'resolved': return CASES.filter(function(c) { return c.status === 'Resolved' || c.status === 'Archived'; });
+    case 'pending': return CASES.filter(function(c) { return c.status === 'Submitted'; });
+    case 'officers': return USERS;
+    default: return [];
+  }
+}
+
+function renderFilteredResults(data) {
+  if (!data || data.length === 0) {
+    return '<div style="text-align:center;padding:40px;color:var(--text-light)">No results found</div>';
+  }
+  return '<div class="table-wrap"><table><thead><tr>\
+    <th>Case ID</th><th>Victim</th><th>Incident</th><th>Priority</th><th>Status</th><th>Assigned To</th><th>Date</th>\
+  </tr></thead><tbody>' + data.map(function(c) {
+    var badgeClass = c.priority === 'HIGH' ? 'badge-red' : c.priority === 'MEDIUM' ? 'badge-orange' : 'badge-green';
+    var statusClass = c.status === 'Resolved' || c.status === 'Archived' ? 'badge-green' :
+      c.status === 'Submitted' ? 'badge-blue' : c.status === 'Assigned' ? 'badge-orange' : 'badge-gray';
+    return '<tr class="clickable" onclick="closeModal(\'dashboardModal\');setTimeout(function(){showCaseDetail(' + c.id + ')},200)">\
+      <td><strong>' + (c.case_id || 'N/A') + '</strong></td>\
+      <td>' + c.victim_name + '</td>\
+      <td>' + c.incident_type + '</td>\
+      <td><span class="priority-indicator"><span class="priority-dot ' + (c.priority||'').toLowerCase() + '"></span> ' + c.priority + '</span></td>\
+      <td><span class="badge ' + statusClass + '">' + c.status + '</span></td>\
+      <td>' + (c.assigned_to_name || '<span style="color:var(--text-light)">Unassigned</span>') + '</td>\
+      <td>' + (c.date_reported ? new Date(c.date_reported).toLocaleDateString() : '') + '</td>\
+    </tr>';
+  }).join('') + '</tbody></table></div>';
+}
+
+function renderOfficersTable(data) {
+  if (!data || data.length === 0) {
+    return '<div style="text-align:center;padding:40px;color:var(--text-light)">No officers registered</div>';
+  }
+  return '<div class="table-wrap"><table><thead><tr>\
+    <th>Name</th><th>Username</th><th>Email</th><th>Role</th><th>Barangay</th><th>Contact</th><th>Status</th>\
+  </tr></thead><tbody>' + data.map(function(u) {
+    return '<tr>\
+      <td><strong>' + u.full_name + '</strong></td>\
+      <td>' + u.username + '</td>\
+      <td>' + u.email + '</td>\
+      <td><span class="badge ' + (u.role === 'admin' ? 'badge-red' : 'badge-blue') + '">' + u.role + '</span></td>\
+      <td>' + (u.barangay || 'N/A') + '</td>\
+      <td>' + (u.contact_number || 'N/A') + '</td>\
+      <td><span class="badge ' + (u.is_active ? 'badge-green' : 'badge-gray') + '">' + (u.is_active ? 'Active' : 'Inactive') + '</span></td>\
+    </tr>';
+  }).join('') + '</tbody></table></div>';
+}
+
+// ============ VAWC ASSISTANT INIT ============
+function initDashboardAssistant() {
+  loadFAQAnswer();
+  setTimeout(function() {
+    document.getElementById('dashAssistantFab').style.display = 'flex';
+  }, 500);
+}
+
 // ============ AUTO INIT ============
 if(TOKEN) {
   (async()=>{
@@ -953,5 +1242,6 @@ if(TOKEN) {
   })();
 } else { document.getElementById('loginPage').style.display='flex'; }
 </script>
+<script src="/static/vawc-assistant.js"></script>
 </body>
 </html>

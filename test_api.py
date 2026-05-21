@@ -72,7 +72,7 @@ def test_get_me():
 def test_submit_report():
     print("\n[TEST] Submit Report")
 
-    res = requests.post(f"{BASE_URL}/submit_report", json=report_data)
+    res = requests.post(f"{BASE_URL}/submit_report", data=report_data)
     print(res.status_code, res.json())
 
 

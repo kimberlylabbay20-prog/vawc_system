@@ -1,8 +1,11 @@
 import os
 from urllib.parse import urlparse
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.orm import sessionmaker, declarative_base
+import logging
+
+logger = logging.getLogger(__name__)
 
 # =========================
 # DATABASE URL
@@ -76,6 +79,41 @@ SessionLocal = sessionmaker(
 # BASE MODEL
 # =========================
 Base = declarative_base()
+
+# =========================
+# SAFE SCHEMA SYNC (no data loss)
+# =========================
+def sync_schema():
+    """Auto-add missing columns to existing tables without dropping or losing data.
+
+    Always adds columns as NULLable to avoid failures on tables with existing rows.
+    ORM-level NOT NULL constraints remain enforced for new records via SQLAlchemy.
+    """
+    try:
+        inspector = inspect(engine)
+        for table_name, table in Base.metadata.tables.items():
+            existing_columns = {c["name"] for c in inspector.get_columns(table_name)}
+            model_columns = {c.name for c in table.columns}
+            missing = model_columns - existing_columns
+            if not missing:
+                continue
+            logger.info("Table '%s' — adding columns: %s", table_name, sorted(missing))
+            for col_name in sorted(missing):
+                col = table.columns[col_name]
+                col_type = col.type.compile(engine.dialect)
+                parts = [f'ALTER TABLE "{table_name}" ADD COLUMN "{col_name}" {col_type}']
+                parts.append("NULL")
+                if col.server_default and col.server_default.arg is not None:
+                    parts.append(f"DEFAULT {col.server_default.arg.text}")
+                sql = text(" ".join(parts))
+                with engine.connect() as conn:
+                    conn.execute(sql)
+                    conn.commit()
+                logger.info("  + %s", col_name)
+        logger.info("Schema sync completed.")
+    except Exception as e:
+        logger.warning("Schema sync issue (non-fatal): %s", e)
+
 
 # =========================
 # GET DB

@@ -12,7 +12,10 @@ from jose import jwt, JWTError
 import bcrypt as _bcrypt
 
 import models, schemas, crud
+import logging
 from database import engine, SessionLocal, Base
+
+logger = logging.getLogger(__name__)
 
 # ---------- Auth Setup ----------
 SECRET_KEY = "vawc-system-secret-key-change-in-production"
@@ -43,8 +46,12 @@ app = FastAPI(
 def on_startup():
     try:
         Base.metadata.create_all(bind=engine)
-    except Exception:
-        pass
+        logger.info("Base tables created/verified")
+        from database import sync_schema
+        sync_schema()
+        logger.info("Database schema sync completed successfully")
+    except Exception as e:
+        logger.error("Database startup failed: %s", e)
 
 app.add_middleware(
     CORSMiddleware,
@@ -672,4 +679,19 @@ HEALTH_TAG = "System"
 
 @app.get("/api/health", tags=[HEALTH_TAG])
 def health_check():
-    return {"status": "ok", "timestamp": datetime.utcnow().isoformat()}
+    db_status = "ok"
+    db_error = None
+    from sqlalchemy import text
+    try:
+        db = SessionLocal()
+        db.execute(text("SELECT 1"))
+        db.close()
+    except Exception as e:
+        db_status = "error"
+        db_error = f"{type(e).__name__}: {str(e)[:200]}"
+    return {
+        "status": "ok",
+        "database": db_status,
+        "database_error": db_error,
+        "timestamp": datetime.utcnow().isoformat()
+    }

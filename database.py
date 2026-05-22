@@ -1,34 +1,70 @@
 import os
+from urllib.parse import urlparse
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
 # =========================
-# LOAD DATABASE URL
+# DATABASE URL
 # =========================
-DATABASE_URL = os.getenv("DATABASE_URL")
+RAW_URL = os.getenv("DATABASE_URL", "").strip()
 
-if not DATABASE_URL:
-    DATABASE_URL = "sqlite:///./test.db"
+if not RAW_URL:
+    raise Exception("DATABASE_URL is not set in Vercel environment variables.")
+
+print("DATABASE_URL found.")
+
+# =========================
+# NORMALIZE POSTGRES URL
+# =========================
+if RAW_URL.startswith("postgres://"):
+    DATABASE_URL = RAW_URL.replace(
+        "postgres://",
+        "postgresql+psycopg2://",
+        1
+    )
+elif RAW_URL.startswith("postgresql://"):
+    DATABASE_URL = RAW_URL.replace(
+        "postgresql://",
+        "postgresql+psycopg2://",
+        1
+    )
+else:
+    DATABASE_URL = RAW_URL
+
+# =========================
+# LOG SAFE HOST INFO
+# =========================
+parsed = urlparse(DATABASE_URL)
+
+print(f"Using host: {parsed.hostname}")
+print(f"Using port: {parsed.port}")
+
+if "pooler.supabase.com" in DATABASE_URL:
+    print("Using pooled Supabase connection.")
+else:
+    print("WARNING: NOT using pooled connection.")
 
 # =========================
 # ENGINE CONFIG
 # =========================
-connect_args = {}
-
-if DATABASE_URL.startswith("postgresql"):
-    connect_args = {"sslmode": "require"}
-elif DATABASE_URL.startswith("sqlite"):
-    connect_args = {"check_same_thread": False}
-
 engine = create_engine(
     DATABASE_URL,
-    connect_args=connect_args,
     pool_pre_ping=True,
     pool_recycle=300,
+    pool_size=5,
+    max_overflow=10,
+    connect_args={
+        "connect_timeout": 10,
+        "sslmode": "require"
+    },
+    echo=False
 )
 
+print("Database engine created successfully.")
+
 # =========================
-# SESSION
+# SESSION LOCAL
 # =========================
 SessionLocal = sessionmaker(
     autocommit=False,
@@ -40,3 +76,13 @@ SessionLocal = sessionmaker(
 # BASE MODEL
 # =========================
 Base = declarative_base()
+
+# =========================
+# GET DB
+# =========================
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()

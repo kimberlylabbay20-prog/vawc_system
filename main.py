@@ -50,6 +50,31 @@ def on_startup():
         from database import sync_schema
         sync_schema()
         logger.info("Database schema sync completed successfully")
+
+        # Create Case records for existing reports that don't have one
+        try:
+            from sqlalchemy import inspect as sa_inspect
+            inspector = sa_inspect(engine)
+            if "cases" in inspector.get_table_names():
+                migration_db = SessionLocal()
+                try:
+                    subq = migration_db.query(models.Case.report_id).subquery()
+                    orphans = migration_db.query(models.Report).filter(
+                        ~models.Report.id.in_(subq)
+                    ).all()
+                    if orphans:
+                        for report in orphans:
+                            case = models.Case(report_id=report.id, status=report.status or "Submitted")
+                            migration_db.add(case)
+                        migration_db.commit()
+                        logger.info("Created %d missing Case records for existing reports", len(orphans))
+                except Exception as mig_e:
+                    logger.warning("Case migration issue: %s", mig_e)
+                finally:
+                    migration_db.close()
+        except Exception as e:
+            logger.warning("Case migration check skipped: %s", e)
+
     except Exception as e:
         logger.error("Database startup failed: %s", e)
 
@@ -167,7 +192,15 @@ def submit_report(
     db.commit()
     db.refresh(new_report)
 
-    crud.log_activity(db, new_report.id, "Case submitted", None)
+    new_case = models.Case(
+        report_id=new_report.id,
+        status="Submitted"
+    )
+    db.add(new_case)
+    db.commit()
+    db.refresh(new_case)
+
+    crud.log_activity(db, new_case.id, "Case submitted", None)
     crud.create_notification(db, new_report.id, f"New {priority} priority case: {case_id}", "admin")
 
     if priority == "HIGH":
@@ -332,7 +365,8 @@ def get_case_detail(case_id: int, current_user: models.User = Depends(get_curren
         user = crud.get_user(db, case.assigned_to)
         if user:
             officer_name = user.full_name
-    activities = crud.get_case_activities(db, case_id)
+    case_activity_id = crud.resolve_case_activity_id(db, case_id)
+    activities = crud.get_case_activities(db, case_activity_id)
     referrals = crud.get_case_referrals(db, case_id)
     return {
         "case": {
@@ -382,7 +416,8 @@ def update_case(
     case = crud.update_case(db, case_id, update)
     if not case:
         raise HTTPException(status_code=404, detail="Case not found")
-    crud.log_activity(db, case_id, f"Status updated to {case.status}", current_user.id)
+    case_activity_id = crud.resolve_case_activity_id(db, case_id)
+    crud.log_activity(db, case_activity_id, f"Status updated to {case.status}", current_user.id)
     return case
 
 @app.delete("/api/cases/{case_id}", tags=[CASES_TAG])
@@ -467,7 +502,8 @@ def case_activities(case_id: int, current_user: models.User = Depends(get_curren
     case = crud.get_case(db, case_id)
     if not case:
         raise HTTPException(status_code=404, detail="Case not found")
-    return crud.get_case_activities(db, case_id)
+    case_activity_id = crud.resolve_case_activity_id(db, case_id)
+    return crud.get_case_activities(db, case_activity_id)
 
 @app.get("/api/cases/{case_id}/referrals", tags=[CASES_TAG])
 def case_referrals(case_id: int, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
@@ -668,7 +704,8 @@ def update_referral_status(
     referral.status = update.status
     db.commit()
     db.refresh(referral)
-    crud.log_activity(db, referral.case_id, f"Referral status updated to {update.status}", current_user.id)
+    case_activity_id = crud.resolve_case_activity_id(db, referral.case_id)
+    crud.log_activity(db, case_activity_id, f"Referral status updated to {update.status}", current_user.id)
     return referral
 
 # =====================================================================

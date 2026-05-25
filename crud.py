@@ -106,7 +106,7 @@ def assign_case(db: Session, case_id: int, officer_id: int):
         case.status = "Assigned"
     db.commit()
     db.refresh(case)
-    log_activity(db, case_id, f"Assigned to officer #{officer_id}", officer_id)
+    log_activity(db, resolve_case_activity_id(db, case_id), f"Assigned to officer #{officer_id}", officer_id)
     return case
 
 def add_case_note(db: Session, case_id: int, notes: str, officer_id: int):
@@ -118,7 +118,7 @@ def add_case_note(db: Session, case_id: int, notes: str, officer_id: int):
     case.case_notes = f"{existing}\n[{timestamp}] Officer #{officer_id}: {notes}".strip()
     db.commit()
     db.refresh(case)
-    log_activity(db, case_id, "Note added", officer_id, notes)
+    log_activity(db, resolve_case_activity_id(db, case_id), "Note added", officer_id, notes)
     return case
 
 def resolve_case(db: Session, case_id: int, resolution_notes: str, officer_id: int):
@@ -129,7 +129,7 @@ def resolve_case(db: Session, case_id: int, resolution_notes: str, officer_id: i
     case.resolution_notes = resolution_notes
     db.commit()
     db.refresh(case)
-    log_activity(db, case_id, "Case resolved", officer_id, resolution_notes)
+    log_activity(db, resolve_case_activity_id(db, case_id), "Case resolved", officer_id, resolution_notes)
     return case
 
 def archive_case(db: Session, case_id: int):
@@ -139,10 +139,15 @@ def archive_case(db: Session, case_id: int):
     case.status = "Archived"
     db.commit()
     db.refresh(case)
-    log_activity(db, case_id, "Case archived", None)
+    log_activity(db, resolve_case_activity_id(db, case_id), "Case archived", None)
     return case
 
 # ========== CASE ACTIVITY ==========
+
+def resolve_case_activity_id(db: Session, report_id: int) -> int:
+    """Get the Case.id for a given Report.id (case_activities FK now references cases.id)."""
+    case = db.query(models.Case).filter(models.Case.report_id == report_id).first()
+    return case.id if case else report_id
 
 def log_activity(db: Session, case_id: int, action: str, performed_by: int = None, notes: str = None):
     activity = models.CaseActivity(
@@ -204,7 +209,7 @@ def create_evidence(db: Session, case_id: int, filename: str, file_path: str, fi
     db.add(ev)
     db.commit()
     db.refresh(ev)
-    log_activity(db, case_id, f"Evidence uploaded: {filename}", uploaded_by)
+    log_activity(db, resolve_case_activity_id(db, case_id), f"Evidence uploaded: {filename}", uploaded_by)
     return ev
 
 def get_case_evidence(db: Session, case_id: int):
@@ -232,7 +237,7 @@ def create_referral(db: Session, case_id: int, referred_to: str, reason: str):
     db.add(referral)
     db.commit()
     db.refresh(referral)
-    log_activity(db, case_id, f"Referred to {referred_to}", None, reason)
+    log_activity(db, resolve_case_activity_id(db, case_id), f"Referred to {referred_to}", None, reason)
     create_notification(db, case_id, f"Case referred to {referred_to}: {reason}", referred_to.lower())
     return referral
 

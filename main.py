@@ -192,16 +192,12 @@ def submit_report(
     db.commit()
     db.refresh(new_report)
 
-    try:
-        new_case = models.Case(report_id=new_report.id, status="Submitted")
-        db.add(new_case)
-        db.commit()
-        db.refresh(new_case)
-    except Exception as e:
-        db.rollback()
-        print("CASE NOT CREATED (NON-FATAL):", type(e).__name__, str(e), flush=True)
+    new_case = models.Case(report_id=new_report.id, status="Submitted")
+    db.add(new_case)
+    db.commit()
+    db.refresh(new_case)
 
-    crud.log_activity(db, new_report.id, "Case submitted", None)
+    crud.log_activity(db, new_case.id, "Case submitted", None)
     crud.create_notification(db, new_report.id, f"New {priority} priority case: {case_id}", "admin")
 
     if priority == "HIGH":
@@ -546,9 +542,13 @@ def recent_activity(limit: int = 10, current_user: models.User = Depends(get_cur
             user = crud.get_user(db, a.performed_by)
             if user:
                 name = user.full_name
+        report_id = a.case_id
+        case = db.query(models.Case).filter(models.Case.id == a.case_id).first()
+        if case:
+            report_id = case.report_id
         result.append({
             "id": a.id,
-            "case_id": a.case_id,
+            "case_id": report_id,
             "action": a.action,
             "performed_by": a.performed_by,
             "performed_by_name": name,

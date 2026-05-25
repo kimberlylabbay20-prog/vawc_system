@@ -145,8 +145,11 @@ def archive_case(db: Session, case_id: int):
 # ========== CASE ACTIVITY ==========
 
 def log_activity(db: Session, case_id: int, action: str, performed_by: int = None, notes: str = None):
+    # FK case_activities.case_id → cases.id, so resolve Report.id → Case.id
+    case = db.query(models.Case).filter(models.Case.report_id == case_id).first()
+    actual_case_id = case.id if case else case_id
     activity = models.CaseActivity(
-        case_id=case_id,
+        case_id=actual_case_id,
         action=action,
         performed_by=performed_by,
         notes=notes
@@ -155,8 +158,11 @@ def log_activity(db: Session, case_id: int, action: str, performed_by: int = Non
     db.commit()
 
 def get_case_activities(db: Session, case_id: int):
+    # Resolve Report.id → Case.id for lookup
+    case = db.query(models.Case).filter(models.Case.report_id == case_id).first()
+    actual_case_id = case.id if case else case_id
     return db.query(models.CaseActivity).filter(
-        models.CaseActivity.case_id == case_id
+        models.CaseActivity.case_id == actual_case_id
     ).order_by(models.CaseActivity.created_at.desc()).all()
 
 # ========== NOTIFICATIONS ==========

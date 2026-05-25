@@ -44,8 +44,8 @@ app = FastAPI(
 
 @app.on_event("startup")
 def on_startup():
-    print("ACTIVE BUILD COMMIT: 852c3aa")
-    print("ACTIVE FILE:", __file__)
+    import sys as _sys
+    print("VAWC STARTUP: commit=852c3aa+ file=" + str(__file__) + " python=" + _sys.version, flush=True)
     try:
         Base.metadata.create_all(bind=engine)
         logger.info("Base tables created/verified")
@@ -194,16 +194,30 @@ def submit_report(
     db.commit()
     db.refresh(new_report)
 
+    try:
+        from database import engine as _eng
+        Base.metadata.create_all(bind=_eng)
+    except Exception as e:
+        print("CREATE_ALL SAFETY NET ISSUE:", e)
+
     new_case = models.Case(
         report_id=new_report.id,
         status="Submitted"
     )
-    db.add(new_case)
-    db.commit()
-    db.refresh(new_case)
+    try:
+        db.add(new_case)
+        db.commit()
+        db.refresh(new_case)
+        case_id_for_activity = new_case.id
+        print("CASE CREATED OK, CASE.ID FOR ACTIVITY:", case_id_for_activity)
+    except Exception as e:
+        db.rollback()
+        case_id_for_activity = new_report.id
+        print("CASE CREATION FAILED:", type(e).__name__, str(e))
+        print("FALLBACK: USING REPORT.ID FOR ACTIVITY:", case_id_for_activity)
 
-    print("USING CASE ID:", new_case.id)
-    crud.log_activity(db, new_case.id, "Case submitted", None)
+    print("FINAL CASE ID FOR LOG_ACTIVITY:", case_id_for_activity)
+    crud.log_activity(db, case_id_for_activity, "Case submitted", None)
     crud.create_notification(db, new_report.id, f"New {priority} priority case: {case_id}", "admin")
 
     if priority == "HIGH":

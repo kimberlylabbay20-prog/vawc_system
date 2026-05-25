@@ -146,16 +146,20 @@ def archive_case(db: Session, case_id: int):
 
 def resolve_case_id(db: Session, report_id: int) -> int:
     """Get the Case.id for a given Report.id. Auto-creates missing Case rows for legacy reports."""
-    case = db.query(models.Case).filter(models.Case.report_id == report_id).first()
-    if case:
-        return case.id
-    report = db.query(models.Report).filter(models.Report.id == report_id).first()
-    if report:
-        new_case = models.Case(report_id=report.id, status=report.status or "Submitted")
-        db.add(new_case)
-        db.commit()
-        db.refresh(new_case)
-        return new_case.id
+    try:
+        case = db.query(models.Case).filter(models.Case.report_id == report_id).first()
+        if case:
+            return case.id
+        report = db.query(models.Report).filter(models.Report.id == report_id).first()
+        if report:
+            new_case = models.Case(report_id=report.id, status=report.status or "Submitted")
+            db.add(new_case)
+            db.commit()
+            db.refresh(new_case)
+            return new_case.id
+    except Exception as e:
+        print("resolve_case_id ERROR:", type(e).__name__, str(e), flush=True)
+        db.rollback()
     return report_id
 
 def log_activity(db: Session, case_id: int, action: str, performed_by: int = None, notes: str = None):

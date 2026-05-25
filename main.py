@@ -44,8 +44,6 @@ app = FastAPI(
 
 @app.on_event("startup")
 def on_startup():
-    import sys as _sys
-    print("VAWC STARTUP: commit=852c3aa+ file=" + str(__file__) + " python=" + _sys.version, flush=True)
     try:
         Base.metadata.create_all(bind=engine)
         logger.info("Base tables created/verified")
@@ -195,29 +193,15 @@ def submit_report(
     db.refresh(new_report)
 
     try:
-        from database import engine as _eng
-        Base.metadata.create_all(bind=_eng)
-    except Exception as e:
-        print("CREATE_ALL SAFETY NET ISSUE:", e)
-
-    new_case = models.Case(
-        report_id=new_report.id,
-        status="Submitted"
-    )
-    try:
+        new_case = models.Case(report_id=new_report.id, status="Submitted")
         db.add(new_case)
         db.commit()
         db.refresh(new_case)
-        case_id_for_activity = new_case.id
-        print("CASE CREATED OK, CASE.ID FOR ACTIVITY:", case_id_for_activity)
     except Exception as e:
         db.rollback()
-        case_id_for_activity = new_report.id
-        print("CASE CREATION FAILED:", type(e).__name__, str(e))
-        print("FALLBACK: USING REPORT.ID FOR ACTIVITY:", case_id_for_activity)
+        print("CASE NOT CREATED (NON-FATAL):", type(e).__name__, str(e), flush=True)
 
-    print("FINAL CASE ID FOR LOG_ACTIVITY:", case_id_for_activity)
-    crud.log_activity(db, case_id_for_activity, "Case submitted", None)
+    crud.log_activity(db, new_report.id, "Case submitted", None)
     crud.create_notification(db, new_report.id, f"New {priority} priority case: {case_id}", "admin")
 
     if priority == "HIGH":
@@ -382,8 +366,7 @@ def get_case_detail(case_id: int, current_user: models.User = Depends(get_curren
         user = crud.get_user(db, case.assigned_to)
         if user:
             officer_name = user.full_name
-    case_activity_id = crud.resolve_case_id(db, case_id)
-    activities = crud.get_case_activities(db, case_activity_id)
+    activities = crud.get_case_activities(db, case_id)
     referrals = crud.get_case_referrals(db, case_id)
     return {
         "case": {
@@ -433,8 +416,7 @@ def update_case(
     case = crud.update_case(db, case_id, update)
     if not case:
         raise HTTPException(status_code=404, detail="Case not found")
-    case_activity_id = crud.resolve_case_id(db, case_id)
-    crud.log_activity(db, case_activity_id, f"Status updated to {case.status}", current_user.id)
+    crud.log_activity(db, case_id, f"Status updated to {case.status}", current_user.id)
     return case
 
 @app.delete("/api/cases/{case_id}", tags=[CASES_TAG])
@@ -519,8 +501,7 @@ def case_activities(case_id: int, current_user: models.User = Depends(get_curren
     case = crud.get_case(db, case_id)
     if not case:
         raise HTTPException(status_code=404, detail="Case not found")
-    case_activity_id = crud.resolve_case_id(db, case_id)
-    return crud.get_case_activities(db, case_activity_id)
+    return crud.get_case_activities(db, case_id)
 
 @app.get("/api/cases/{case_id}/referrals", tags=[CASES_TAG])
 def case_referrals(case_id: int, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
@@ -721,8 +702,7 @@ def update_referral_status(
     referral.status = update.status
     db.commit()
     db.refresh(referral)
-    case_activity_id = crud.resolve_case_id(db, referral.case_id)
-    crud.log_activity(db, case_activity_id, f"Referral status updated to {update.status}", current_user.id)
+    crud.log_activity(db, referral.case_id, f"Referral status updated to {update.status}", current_user.id)
     return referral
 
 # =====================================================================

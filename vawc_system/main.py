@@ -156,15 +156,16 @@ def submit_report(
     db.commit()
     db.refresh(new_report)
 
-    new_case = models.Case(
-        report_id=new_report.id,
-        status="Submitted"
-    )
-    db.add(new_case)
-    db.commit()
-    db.refresh(new_case)
+    try:
+        new_case = models.Case(report_id=new_report.id, status="Submitted")
+        db.add(new_case)
+        db.commit()
+        db.refresh(new_case)
+    except Exception as e:
+        db.rollback()
+        print("CASE NOT CREATED (NON-FATAL):", type(e).__name__, str(e), flush=True)
 
-    crud.log_activity(db, new_case.id, "Case submitted", None)
+    crud.log_activity(db, new_report.id, "Case submitted", None)
     crud.create_notification(db, new_report.id, f"New {priority} priority case: {case_id}", "admin")
 
     if priority == "HIGH":
@@ -274,8 +275,7 @@ def get_case_detail(case_id: int, db: Session = Depends(get_db)):
         user = crud.get_user(db, case.assigned_to)
         if user:
             officer_name = user.full_name
-    case_activity_id = crud.resolve_case_id(db, case_id)
-    activities = crud.get_case_activities(db, case_activity_id)
+    activities = crud.get_case_activities(db, case_id)
     referrals = crud.get_case_referrals(db, case_id)
     return {
         "case": {
@@ -325,8 +325,7 @@ def update_case(
     case = crud.update_case(db, case_id, update)
     if not case:
         raise HTTPException(status_code=404, detail="Case not found")
-    case_activity_id = crud.resolve_case_id(db, case_id)
-    crud.log_activity(db, case_activity_id, f"Status updated to {case.status}", current_user.id)
+    crud.log_activity(db, case_id, f"Status updated to {case.status}", current_user.id)
     return case
 
 @app.delete("/api/cases/{case_id}", tags=[CASES_TAG])
@@ -411,8 +410,7 @@ def case_activities(case_id: int, db: Session = Depends(get_db)):
     case = crud.get_case(db, case_id)
     if not case:
         raise HTTPException(status_code=404, detail="Case not found")
-    case_activity_id = crud.resolve_case_id(db, case_id)
-    return crud.get_case_activities(db, case_activity_id)
+    return crud.get_case_activities(db, case_id)
 
 @app.get("/api/cases/{case_id}/referrals", tags=[CASES_TAG])
 def case_referrals(case_id: int, db: Session = Depends(get_db)):
@@ -613,8 +611,7 @@ def update_referral_status(
     referral.status = update.status
     db.commit()
     db.refresh(referral)
-    case_activity_id = crud.resolve_case_id(db, referral.case_id)
-    crud.log_activity(db, case_activity_id, f"Referral status updated to {update.status}", current_user.id)
+    crud.log_activity(db, referral.case_id, f"Referral status updated to {update.status}", current_user.id)
     return referral
 
 # =====================================================================

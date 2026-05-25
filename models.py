@@ -53,6 +53,12 @@ class Report(Base):
 
     case_record = relationship("Case", back_populates="report", foreign_keys="Case.report_id", uselist=False)
 
+    activities = relationship(
+        "CaseActivity",
+        back_populates="case",
+        foreign_keys="CaseActivity.case_id"
+    )
+
     notifications = relationship(
         "Notification",
         back_populates="case",
@@ -75,20 +81,19 @@ class Case(Base):
     updated_at = Column(TIMESTAMP, server_default=func.now(), onupdate=func.now())
 
     report = relationship("Report", back_populates="case_record", foreign_keys=[report_id])
-    activities = relationship("CaseActivity", back_populates="case", foreign_keys="CaseActivity.case_id")
 
 
 class CaseActivity(Base):
     __tablename__ = "case_activities"
 
     id = Column(Integer, primary_key=True, index=True)
-    case_id = Column(Integer, ForeignKey("cases.id"), nullable=False)
+    case_id = Column(Integer, ForeignKey("reports.id"), nullable=False)
     action = Column(String(200), nullable=False)
     performed_by = Column(Integer, ForeignKey("users.id"), nullable=True)
     notes = Column(Text, nullable=True)
     created_at = Column(TIMESTAMP, server_default=func.now())
 
-    case = relationship("Case", back_populates="activities", foreign_keys=[case_id])
+    case = relationship("Report", back_populates="activities", foreign_keys=[case_id])
     performer = relationship("User", back_populates="activities", foreign_keys=[performed_by])
 
 

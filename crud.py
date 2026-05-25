@@ -106,7 +106,7 @@ def assign_case(db: Session, case_id: int, officer_id: int):
         case.status = "Assigned"
     db.commit()
     db.refresh(case)
-    log_activity(db, resolve_case_id(db, case_id), f"Assigned to officer #{officer_id}", officer_id)
+    log_activity(db, case_id, f"Assigned to officer #{officer_id}", officer_id)
     return case
 
 def add_case_note(db: Session, case_id: int, notes: str, officer_id: int):
@@ -118,7 +118,7 @@ def add_case_note(db: Session, case_id: int, notes: str, officer_id: int):
     case.case_notes = f"{existing}\n[{timestamp}] Officer #{officer_id}: {notes}".strip()
     db.commit()
     db.refresh(case)
-    log_activity(db, resolve_case_id(db, case_id), "Note added", officer_id, notes)
+    log_activity(db, case_id, "Note added", officer_id, notes)
     return case
 
 def resolve_case(db: Session, case_id: int, resolution_notes: str, officer_id: int):
@@ -129,7 +129,7 @@ def resolve_case(db: Session, case_id: int, resolution_notes: str, officer_id: i
     case.resolution_notes = resolution_notes
     db.commit()
     db.refresh(case)
-    log_activity(db, resolve_case_id(db, case_id), "Case resolved", officer_id, resolution_notes)
+    log_activity(db, case_id, "Case resolved", officer_id, resolution_notes)
     return case
 
 def archive_case(db: Session, case_id: int):
@@ -139,28 +139,10 @@ def archive_case(db: Session, case_id: int):
     case.status = "Archived"
     db.commit()
     db.refresh(case)
-    log_activity(db, resolve_case_id(db, case_id), "Case archived", None)
+    log_activity(db, case_id, "Case archived", None)
     return case
 
 # ========== CASE ACTIVITY ==========
-
-def resolve_case_id(db: Session, report_id: int) -> int:
-    """Get the Case.id for a given Report.id. Auto-creates missing Case rows for legacy reports."""
-    try:
-        case = db.query(models.Case).filter(models.Case.report_id == report_id).first()
-        if case:
-            return case.id
-        report = db.query(models.Report).filter(models.Report.id == report_id).first()
-        if report:
-            new_case = models.Case(report_id=report.id, status=report.status or "Submitted")
-            db.add(new_case)
-            db.commit()
-            db.refresh(new_case)
-            return new_case.id
-    except Exception as e:
-        print("resolve_case_id ERROR:", type(e).__name__, str(e), flush=True)
-        db.rollback()
-    return report_id
 
 def log_activity(db: Session, case_id: int, action: str, performed_by: int = None, notes: str = None):
     activity = models.CaseActivity(
@@ -222,7 +204,7 @@ def create_evidence(db: Session, case_id: int, filename: str, file_path: str, fi
     db.add(ev)
     db.commit()
     db.refresh(ev)
-    log_activity(db, resolve_case_id(db, case_id), f"Evidence uploaded: {filename}", uploaded_by)
+    log_activity(db, case_id, f"Evidence uploaded: {filename}", uploaded_by)
     return ev
 
 def get_case_evidence(db: Session, case_id: int):
@@ -250,7 +232,7 @@ def create_referral(db: Session, case_id: int, referred_to: str, reason: str):
     db.add(referral)
     db.commit()
     db.refresh(referral)
-    log_activity(db, resolve_case_id(db, case_id), f"Referred to {referred_to}", None, reason)
+    log_activity(db, case_id, f"Referred to {referred_to}", None, reason)
     create_notification(db, case_id, f"Case referred to {referred_to}: {reason}", referred_to.lower())
     return referral
 

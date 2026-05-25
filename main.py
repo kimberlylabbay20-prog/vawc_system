@@ -44,6 +44,8 @@ app = FastAPI(
 
 @app.on_event("startup")
 def on_startup():
+    print("ACTIVE BUILD COMMIT: 852c3aa")
+    print("ACTIVE FILE:", __file__)
     try:
         Base.metadata.create_all(bind=engine)
         logger.info("Base tables created/verified")
@@ -200,6 +202,7 @@ def submit_report(
     db.commit()
     db.refresh(new_case)
 
+    print("USING CASE ID:", new_case.id)
     crud.log_activity(db, new_case.id, "Case submitted", None)
     crud.create_notification(db, new_report.id, f"New {priority} priority case: {case_id}", "admin")
 

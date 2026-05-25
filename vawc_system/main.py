@@ -9,21 +9,17 @@ import shutil
 import os
 from datetime import datetime, timedelta
 from jose import jwt, JWTError
-import bcrypt as _bcrypt
+from passlib.context import CryptContext
 
 import models, schemas, crud
-import logging
 from database import engine, SessionLocal, Base
-
-logger = logging.getLogger(__name__)
 
 # ---------- Auth Setup ----------
 SECRET_KEY = "vawc-system-secret-key-change-in-production"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_DAYS = 7
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 security = HTTPBearer(auto_error=False)
-
-# ---------- App Initialization ----------
 app = FastAPI(
     title="Barangay VAWC Case Management System",
     description="Professional case management system for Barangay VAWC. Supports case reporting, triage, assignment, tracking, referrals, and analytics.",
@@ -46,37 +42,8 @@ app = FastAPI(
 def on_startup():
     try:
         Base.metadata.create_all(bind=engine)
-        logger.info("Base tables created/verified")
-        from database import sync_schema
-        sync_schema()
-        logger.info("Database schema sync completed successfully")
-
-        # Create Case records for existing reports that don't have one
-        try:
-            from sqlalchemy import inspect as sa_inspect
-            inspector = sa_inspect(engine)
-            if "cases" in inspector.get_table_names():
-                migration_db = SessionLocal()
-                try:
-                    subq = migration_db.query(models.Case.report_id).subquery()
-                    orphans = migration_db.query(models.Report).filter(
-                        ~models.Report.id.in_(subq)
-                    ).all()
-                    if orphans:
-                        for report in orphans:
-                            case = models.Case(report_id=report.id, status=report.status or "Submitted")
-                            migration_db.add(case)
-                        migration_db.commit()
-                        logger.info("Created %d missing Case records for existing reports", len(orphans))
-                except Exception as mig_e:
-                    logger.warning("Case migration issue: %s", mig_e)
-                finally:
-                    migration_db.close()
-        except Exception as e:
-            logger.warning("Case migration check skipped: %s", e)
-
-    except Exception as e:
-        logger.error("Database startup failed: %s", e)
+    except Exception:
+        pass
 
 app.add_middleware(
     CORSMiddleware,
@@ -99,9 +66,6 @@ def get_db():
     db = SessionLocal()
     try:
         yield db
-    except Exception:
-        db.rollback()
-        raise
     finally:
         db.close()
 
@@ -120,7 +84,7 @@ async def http_exception_handler(request: Request, exc: HTTPException):
 async def global_exception_handler(request: Request, exc: Exception):
     return JSONResponse(
         status_code=500,
-        content={"detail": "Internal server error", "status_code": 500, "type": type(exc).__name__},
+        content={"detail": "Internal server error", "status_code": 500},
     )
 
 # =====================================================================
@@ -128,10 +92,10 @@ async def global_exception_handler(request: Request, exc: Exception):
 # =====================================================================
 
 def hash_password(password: str) -> str:
-    return _bcrypt.hashpw(password.encode("utf-8"), _bcrypt.gensalt()).decode("utf-8")
+    return pwd_context.hash(password)
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return _bcrypt.checkpw(plain_password.encode("utf-8"), hashed_password.encode("utf-8"))
+    return pwd_context.verify(plain_password, hashed_password)
 
 def create_access_token(data: dict) -> str:
     to_encode = data.copy()
@@ -216,10 +180,6 @@ def view_reports(db: Session = Depends(get_db)):
 
 @app.get("/", response_class=HTMLResponse, tags=[EXISTING_TAG], include_in_schema=False)
 def home(request: Request):
-    return templates.TemplateResponse("report.html", {"request": request})
-
-@app.get("/admin", response_class=HTMLResponse, tags=[EXISTING_TAG], include_in_schema=False)
-def admin_dashboard(request: Request):
     return templates.TemplateResponse("dashboard.html", {"request": request})
 
 @app.get("/report", response_class=HTMLResponse, tags=[EXISTING_TAG], include_in_schema=False)
@@ -232,78 +192,28 @@ def report_form(request: Request):
 
 AUTH_TAG = "Authentication"
 
-@app.post("/api/register", tags=[AUTH_TAG])
+@app.post("/api/register", tags=[AUTH_TAG], response_model=schemas.TokenResponse)
 def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
-    try:
-        if crud.get_user_by_username(db, user.username):
-            raise HTTPException(status_code=400, detail="Username already taken")
-        if crud.get_user_by_email(db, user.email):
-            raise HTTPException(status_code=400, detail="Email already registered")
-        password_hash = hash_password(user.password)
-        db_user = crud.create_user(db, user, password_hash)
-        token = create_access_token({"user_id": db_user.id, "role": db_user.role})
-        return {
-            "access_token": token,
-            "token_type": "bearer",
-            "user": {
-                "id": db_user.id,
-                "username": db_user.username,
-                "email": db_user.email,
-                "full_name": db_user.full_name,
-                "role": db_user.role,
-                "barangay": db_user.barangay,
-                "contact_number": db_user.contact_number,
-                "is_active": db_user.is_active,
-                "created_at": db_user.created_at.isoformat() if db_user.created_at else None,
-            }
-        }
-    except HTTPException:
-        raise
-    except Exception:
-        db.rollback()
-        raise HTTPException(status_code=400, detail="Registration failed. Please check your input.")
+    if crud.get_user_by_username(db, user.username):
+        raise HTTPException(status_code=400, detail="Username already taken")
+    if crud.get_user_by_email(db, user.email):
+        raise HTTPException(status_code=400, detail="Email already registered")
+    password_hash = hash_password(user.password)
+    db_user = crud.create_user(db, user, password_hash)
+    token = create_access_token({"user_id": db_user.id, "role": db_user.role})
+    return {"access_token": token, "token_type": "bearer", "user": db_user}
 
-@app.post("/api/login", tags=[AUTH_TAG])
+@app.post("/api/login", tags=[AUTH_TAG], response_model=schemas.TokenResponse)
 def login(credentials: schemas.LoginRequest, db: Session = Depends(get_db)):
-    try:
-        user = crud.get_user_by_username(db, credentials.username)
-        if not user or not verify_password(credentials.password, user.password_hash):
-            raise HTTPException(status_code=401, detail="Invalid username or password")
-        token = create_access_token({"user_id": user.id, "role": user.role})
-        return {
-            "access_token": token,
-            "token_type": "bearer",
-            "user": {
-                "id": user.id,
-                "username": user.username,
-                "email": user.email,
-                "full_name": user.full_name,
-                "role": user.role,
-                "barangay": user.barangay,
-                "contact_number": user.contact_number,
-                "is_active": user.is_active,
-                "created_at": user.created_at.isoformat() if user.created_at else None,
-            }
-        }
-    except HTTPException:
-        raise
-    except Exception:
-        db.rollback()
-        raise HTTPException(status_code=401, detail="Login failed. Please try again.")
+    user = crud.get_user_by_username(db, credentials.username)
+    if not user or not verify_password(credentials.password, user.password_hash):
+        raise HTTPException(status_code=401, detail="Invalid username or password")
+    token = create_access_token({"user_id": user.id, "role": user.role})
+    return {"access_token": token, "token_type": "bearer", "user": user}
 
-@app.get("/api/me", tags=[AUTH_TAG])
+@app.get("/api/me", tags=[AUTH_TAG], response_model=schemas.UserResponse)
 def get_me(current_user: models.User = Depends(get_current_user)):
-    return {
-        "id": current_user.id,
-        "username": current_user.username,
-        "email": current_user.email,
-        "full_name": current_user.full_name,
-        "role": current_user.role,
-        "barangay": current_user.barangay,
-        "contact_number": current_user.contact_number,
-        "is_active": current_user.is_active,
-        "created_at": current_user.created_at.isoformat() if current_user.created_at else None,
-    }
+    return current_user
 
 # =====================================================================
 # CASE MANAGEMENT ENDPOINTS
@@ -316,7 +226,6 @@ def list_cases(
     status: str = None,
     priority: str = None,
     search: str = None,
-    current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     cases = crud.get_all_cases_full(db)
@@ -356,7 +265,7 @@ def list_cases(
     return result
 
 @app.get("/api/cases/{case_id}", tags=[CASES_TAG])
-def get_case_detail(case_id: int, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+def get_case_detail(case_id: int, db: Session = Depends(get_db)):
     case = crud.get_case(db, case_id)
     if not case:
         raise HTTPException(status_code=404, detail="Case not found")
@@ -498,7 +407,7 @@ def refer_case(
     return ref
 
 @app.get("/api/cases/{case_id}/activities", tags=[CASES_TAG])
-def case_activities(case_id: int, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+def case_activities(case_id: int, db: Session = Depends(get_db)):
     case = crud.get_case(db, case_id)
     if not case:
         raise HTTPException(status_code=404, detail="Case not found")
@@ -506,7 +415,7 @@ def case_activities(case_id: int, current_user: models.User = Depends(get_curren
     return crud.get_case_activities(db, case_activity_id)
 
 @app.get("/api/cases/{case_id}/referrals", tags=[CASES_TAG])
-def case_referrals(case_id: int, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+def case_referrals(case_id: int, db: Session = Depends(get_db)):
     case = crud.get_case(db, case_id)
     if not case:
         raise HTTPException(status_code=404, detail="Case not found")
@@ -519,27 +428,27 @@ def case_referrals(case_id: int, current_user: models.User = Depends(get_current
 DASHBOARD_TAG = "Dashboard & Analytics"
 
 @app.get("/api/dashboard/stats", tags=[DASHBOARD_TAG])
-def dashboard_stats(current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+def dashboard_stats(db: Session = Depends(get_db)):
     return crud.get_dashboard_stats(db)
 
 @app.get("/api/dashboard/monthly", tags=[DASHBOARD_TAG])
-def monthly_stats(year: int = None, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+def monthly_stats(year: int = None, db: Session = Depends(get_db)):
     return crud.get_monthly_stats(db, year)
 
 @app.get("/api/dashboard/priority", tags=[DASHBOARD_TAG])
-def priority_breakdown(current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+def priority_breakdown(db: Session = Depends(get_db)):
     return crud.get_priority_breakdown(db)
 
 @app.get("/api/dashboard/status", tags=[DASHBOARD_TAG])
-def status_breakdown(current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+def status_breakdown(db: Session = Depends(get_db)):
     return crud.get_status_breakdown(db)
 
 @app.get("/api/dashboard/workload", tags=[DASHBOARD_TAG])
-def officer_workload(current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+def officer_workload(db: Session = Depends(get_db)):
     return crud.get_officer_workload(db)
 
 @app.get("/api/dashboard/activity", tags=[DASHBOARD_TAG])
-def recent_activity(limit: int = 10, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+def recent_activity(limit: int = 10, db: Session = Depends(get_db)):
     activities = crud.get_recent_activities(db, limit)
     result = []
     for a in activities:
@@ -584,7 +493,7 @@ def upload_evidence(
     return ev
 
 @app.get("/api/cases/{case_id}/evidence", tags=[EVIDENCE_TAG])
-def list_evidence(case_id: int, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+def list_evidence(case_id: int, db: Session = Depends(get_db)):
     case = crud.get_case(db, case_id)
     if not case:
         raise HTTPException(status_code=404, detail="Case not found")
@@ -611,18 +520,18 @@ def delete_evidence(
 NOTIF_TAG = "Notifications"
 
 @app.get("/api/notifications", tags=[NOTIF_TAG])
-def list_notifications(role: str = None, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+def list_notifications(role: str = None, db: Session = Depends(get_db)):
     return crud.get_notifications(db, role)
 
 @app.put("/api/notifications/{notif_id}/read", tags=[NOTIF_TAG])
-def mark_read(notif_id: int, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+def mark_read(notif_id: int, db: Session = Depends(get_db)):
     notif = crud.mark_notification_read(db, notif_id)
     if not notif:
         raise HTTPException(status_code=404, detail="Notification not found")
     return notif
 
 @app.get("/api/notifications/unread-count", tags=[NOTIF_TAG])
-def unread_count(role: str = None, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+def unread_count(role: str = None, db: Session = Depends(get_db)):
     return {"count": crud.get_unread_notification_count(db, role)}
 
 @app.delete("/api/notifications/{notif_id}", tags=[NOTIF_TAG])
@@ -645,7 +554,7 @@ def delete_notification(
 USERS_TAG = "User Management"
 
 @app.get("/api/users", tags=[USERS_TAG])
-def list_users(current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+def list_users(db: Session = Depends(get_db)):
     return crud.get_users(db)
 
 @app.put("/api/users/{user_id}", tags=[USERS_TAG])
@@ -716,19 +625,4 @@ HEALTH_TAG = "System"
 
 @app.get("/api/health", tags=[HEALTH_TAG])
 def health_check():
-    db_status = "ok"
-    db_error = None
-    from sqlalchemy import text
-    try:
-        db = SessionLocal()
-        db.execute(text("SELECT 1"))
-        db.close()
-    except Exception as e:
-        db_status = "error"
-        db_error = f"{type(e).__name__}: {str(e)[:200]}"
-    return {
-        "status": "ok",
-        "database": db_status,
-        "database_error": db_error,
-        "timestamp": datetime.utcnow().isoformat()
-    }
+    return {"status": "ok", "timestamp": datetime.utcnow().isoformat()}

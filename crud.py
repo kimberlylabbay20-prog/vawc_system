@@ -145,15 +145,25 @@ def archive_case(db: Session, case_id: int):
 # ========== CASE ACTIVITY ==========
 
 def log_activity(db: Session, case_id: int, action: str, performed_by: int = None, notes: str = None):
-    # FK case_activities.case_id → cases.id, so resolve Report.id → Case.id
-    case = db.query(models.Case).filter(models.Case.report_id == case_id).first()
-    actual_case_id = case.id if case else case_id
+    # Ensure the ID exists in cases table
+    case = db.query(models.Case).filter(models.Case.id == case_id).first()
+
+    # If not found, try resolving via report_id
+    if not case:
+        case = db.query(models.Case).filter(models.Case.report_id == case_id).first()
+
+    # Still not found? Skip logging to avoid ForeignKeyViolation
+    if not case:
+        print(f"WARNING: No matching Case found for case_id={case_id}")
+        return
+
     activity = models.CaseActivity(
-        case_id=actual_case_id,
+        case_id=case.id,
         action=action,
         performed_by=performed_by,
         notes=notes
     )
+
     db.add(activity)
     db.commit()
 

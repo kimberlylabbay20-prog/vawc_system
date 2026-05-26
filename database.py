@@ -15,7 +15,7 @@ RAW_URL = os.getenv("POSTGRES_URL", "").strip()
 if not RAW_URL:
     raise Exception("POSTGRES_URL is not set in Vercel environment variables.")
 
-print("DATABASE_URL found.")
+print("POSTGRES_URL found.")
 
 # =========================
 # NORMALIZE POSTGRES URL

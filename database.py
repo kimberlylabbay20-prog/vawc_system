@@ -10,10 +10,10 @@ logger = logging.getLogger(__name__)
 # =========================
 # DATABASE URL
 # =========================
-RAW_URL = os.getenv("DATABASE_URL", "").strip()
+RAW_URL = os.getenv("POSTGRES_URL", "").strip()
 
 if not RAW_URL:
-    raise Exception("DATABASE_URL is not set in Vercel environment variables.")
+    raise Exception("POSTGRES_URL is not set in Vercel environment variables.")
 
 print("DATABASE_URL found.")
 

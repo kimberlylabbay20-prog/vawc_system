@@ -609,11 +609,12 @@ async function handleLogin() {
     if(!r.ok) return showError('loginError',d.detail||'Login failed');
     TOKEN=d.access_token; localStorage.setItem('vawc_token',TOKEN);
     CURRENT_USER=d.user;
-    if(['admin','officer'].includes(d.user.role)) {
-      initApp();
+    const role=String(d.user?.role||"").trim().toLowerCase();
+    if(role==="admin"||role==="officer") {
+      window.location.href='/admin';
     } else {
       localStorage.removeItem('vawc_token');
-      window.location.href='/';
+      window.location.href='/report';
     }
   } catch(e) { showError('loginError','Server not reachable'); }
 }
@@ -630,11 +631,12 @@ async function handleRegister() {
     if(!r.ok) return showError('registerError',d.detail||'Registration failed');
     TOKEN=d.access_token; localStorage.setItem('vawc_token',TOKEN);
     CURRENT_USER=d.user;
-    if(['admin','officer'].includes(d.user.role)) {
-      initApp();
+    const role=String(d.user?.role||"").trim().toLowerCase();
+    if(role==="admin"||role==="officer") {
+      window.location.href='/admin';
     } else {
       localStorage.removeItem('vawc_token');
-      window.location.href='/';
+      window.location.href='/report';
     }
   } catch(e) { showError('registerError','Server not reachable'); }
 }
@@ -1231,7 +1233,8 @@ if(TOKEN) {
     try {
       const r=await fetchWithAuth('/api/me');
       CURRENT_USER=await r.json();
-      if(['admin','officer'].includes(CURRENT_USER.role)) {
+      const role=String(CURRENT_USER?.role||"").trim().toLowerCase();
+      if(role==="admin"||role==="officer") {
         initApp();
       } else {
         localStorage.removeItem('vawc_token');

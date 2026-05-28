@@ -229,7 +229,7 @@ def home(request: Request):
     return templates.TemplateResponse("report.html", {"request": request})
 
 @app.get("/admin", response_class=HTMLResponse, tags=[EXISTING_TAG], include_in_schema=False)
-def admin_dashboard(request: Request, current_user: models.User = Depends(require_role("admin"))):
+def admin_dashboard(request: Request):
     return templates.TemplateResponse("dashboard.html", {"request": request})
 
 @app.get("/report", response_class=HTMLResponse, tags=[EXISTING_TAG], include_in_schema=False)

@@ -55,6 +55,7 @@ class UserCreate(BaseModel):
     role: str = Field("officer", max_length=50, description="User role: admin or officer")
     barangay: Optional[str] = Field(None, max_length=200, description="Assigned barangay")
     contact_number: Optional[str] = Field(None, max_length=50, description="Contact number")
+    admin_secret: Optional[str] = Field(None, max_length=200, description="Secret key required for admin registration")
 
     @field_validator("email")
     @classmethod

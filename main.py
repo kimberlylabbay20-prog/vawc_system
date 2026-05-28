@@ -19,9 +19,15 @@ logger = logging.getLogger(__name__)
 
 # ---------- Auth Setup ----------
 SECRET_KEY = "vawc-system-secret-key-change-in-production"
+ADMIN_SECRET_KEY = os.environ.get("ADMIN_SECRET_KEY", "")
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_DAYS = 7
+ACCESS_TOKEN_EXPIRE_DAYS = 1
 security = HTTPBearer(auto_error=False)
+
+# ---------- Account Lockout ----------
+LOCKOUT_THRESHOLD = 5
+LOCKOUT_DURATION_MINUTES = 15
+failed_login_attempts: dict = {}
 
 # ---------- App Initialization ----------
 app = FastAPI(
@@ -158,6 +164,13 @@ def get_current_user(
         raise HTTPException(status_code=401, detail="User not found or inactive")
     return user
 
+def require_role(*roles: str):
+    def role_checker(current_user: models.User = Depends(get_current_user)):
+        if current_user.role not in roles:
+            raise HTTPException(status_code=403, detail="Unauthorized")
+        return current_user
+    return role_checker
+
 # =====================================================================
 # EXISTING ENDPOINTS (KEEP INTACT - ADDED TAGS + RESPONSE MODELS)
 # =====================================================================
@@ -216,7 +229,7 @@ def home(request: Request):
     return templates.TemplateResponse("report.html", {"request": request})
 
 @app.get("/admin", response_class=HTMLResponse, tags=[EXISTING_TAG], include_in_schema=False)
-def admin_dashboard(request: Request):
+def admin_dashboard(request: Request, current_user: models.User = Depends(require_role("admin"))):
     return templates.TemplateResponse("dashboard.html", {"request": request})
 
 @app.get("/report", response_class=HTMLResponse, tags=[EXISTING_TAG], include_in_schema=False)
@@ -236,6 +249,13 @@ def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
             raise HTTPException(status_code=400, detail="Username already taken")
         if crud.get_user_by_email(db, user.email):
             raise HTTPException(status_code=400, detail="Email already registered")
+
+        if user.role == "admin":
+            if not user.admin_secret or user.admin_secret != ADMIN_SECRET_KEY:
+                raise HTTPException(status_code=403, detail="Invalid admin secret key")
+        else:
+            user.role = "user"
+
         password_hash = hash_password(user.password)
         db_user = crud.create_user(db, user, password_hash)
         token = create_access_token({"user_id": db_user.id, "role": db_user.role})
@@ -263,10 +283,28 @@ def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
 @app.post("/api/login", tags=[AUTH_TAG])
 def login(credentials: schemas.LoginRequest, db: Session = Depends(get_db)):
     try:
+        now = datetime.utcnow()
+        record = failed_login_attempts.get(credentials.username)
+
+        if record and record["locked_until"] and now < record["locked_until"]:
+            logger.warning("Locked account login attempt: %s", credentials.username)
+            raise HTTPException(status_code=423, detail="Account temporarily locked")
+
         user = crud.get_user_by_username(db, credentials.username)
         if not user or not verify_password(credentials.password, user.password_hash):
+            attempt = failed_login_attempts.setdefault(credentials.username, {"count": 0, "locked_until": None})
+            attempt["count"] += 1
+            logger.warning("Failed login for %s (attempt %d/%d)", credentials.username, attempt["count"], LOCKOUT_THRESHOLD)
+            if attempt["count"] >= LOCKOUT_THRESHOLD:
+                attempt["locked_until"] = now + timedelta(minutes=LOCKOUT_DURATION_MINUTES)
+                attempt["count"] = 0
+                logger.warning("Account locked: %s for %d minutes", credentials.username, LOCKOUT_DURATION_MINUTES)
+                raise HTTPException(status_code=423, detail="Account temporarily locked")
             raise HTTPException(status_code=401, detail="Invalid username or password")
+
+        failed_login_attempts.pop(credentials.username, None)
         token = create_access_token({"user_id": user.id, "role": user.role})
+        logger.info("Successful login: %s (role=%s)", user.username, user.role)
         return {
             "access_token": token,
             "token_type": "bearer",
@@ -313,7 +351,7 @@ def list_cases(
     status: str = None,
     priority: str = None,
     search: str = None,
-    current_user: models.User = Depends(get_current_user),
+    current_user: models.User = Depends(require_role("admin", "officer")),
     db: Session = Depends(get_db)
 ):
     cases = crud.get_all_cases_full(db)
@@ -353,7 +391,7 @@ def list_cases(
     return result
 
 @app.get("/api/cases/{case_id}", tags=[CASES_TAG])
-def get_case_detail(case_id: int, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+def get_case_detail(case_id: int, current_user: models.User = Depends(require_role("admin", "officer")), db: Session = Depends(get_db)):
     case = crud.get_case(db, case_id)
     if not case:
         raise HTTPException(status_code=404, detail="Case not found")
@@ -406,7 +444,7 @@ def get_case_detail(case_id: int, current_user: models.User = Depends(get_curren
 def update_case(
     case_id: int,
     update: schemas.ReportUpdate,
-    current_user: models.User = Depends(get_current_user),
+    current_user: models.User = Depends(require_role("admin", "officer")),
     db: Session = Depends(get_db)
 ):
     case = crud.update_case(db, case_id, update)
@@ -418,7 +456,7 @@ def update_case(
 @app.delete("/api/cases/{case_id}", tags=[CASES_TAG])
 def delete_case(
     case_id: int,
-    current_user: models.User = Depends(get_current_user),
+    current_user: models.User = Depends(require_role("admin", "officer")),
     db: Session = Depends(get_db)
 ):
     case = crud.get_case(db, case_id)
@@ -432,7 +470,7 @@ def delete_case(
 def assign_case(
     case_id: int,
     officer_id: int = Form(..., ge=1),
-    current_user: models.User = Depends(get_current_user),
+    current_user: models.User = Depends(require_role("admin", "officer")),
     db: Session = Depends(get_db)
 ):
     case = crud.assign_case(db, case_id, officer_id)
@@ -447,7 +485,7 @@ def assign_case(
 def add_note(
     case_id: int,
     notes: str = Form(..., min_length=1, max_length=5000),
-    current_user: models.User = Depends(get_current_user),
+    current_user: models.User = Depends(require_role("admin", "officer")),
     db: Session = Depends(get_db)
 ):
     case = crud.add_case_note(db, case_id, notes, current_user.id)
@@ -459,7 +497,7 @@ def add_note(
 def resolve_case(
     case_id: int,
     resolution_notes: str = Form(..., min_length=10, max_length=5000),
-    current_user: models.User = Depends(get_current_user),
+    current_user: models.User = Depends(require_role("admin", "officer")),
     db: Session = Depends(get_db)
 ):
     case = crud.resolve_case(db, case_id, resolution_notes, current_user.id)
@@ -471,7 +509,7 @@ def resolve_case(
 @app.post("/api/cases/{case_id}/archive", tags=[CASES_TAG])
 def archive_case(
     case_id: int,
-    current_user: models.User = Depends(get_current_user),
+    current_user: models.User = Depends(require_role("admin", "officer")),
     db: Session = Depends(get_db)
 ):
     case = crud.archive_case(db, case_id)
@@ -483,7 +521,7 @@ def archive_case(
 def refer_case(
     case_id: int,
     referral: schemas.ReferralCreate,
-    current_user: models.User = Depends(get_current_user),
+    current_user: models.User = Depends(require_role("admin", "officer")),
     db: Session = Depends(get_db)
 ):
     case = crud.get_case(db, case_id)
@@ -493,14 +531,14 @@ def refer_case(
     return ref
 
 @app.get("/api/cases/{case_id}/activities", tags=[CASES_TAG])
-def case_activities(case_id: int, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+def case_activities(case_id: int, current_user: models.User = Depends(require_role("admin", "officer")), db: Session = Depends(get_db)):
     case = crud.get_case(db, case_id)
     if not case:
         raise HTTPException(status_code=404, detail="Case not found")
     return crud.get_case_activities(db, case_id)
 
 @app.get("/api/cases/{case_id}/referrals", tags=[CASES_TAG])
-def case_referrals(case_id: int, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+def case_referrals(case_id: int, current_user: models.User = Depends(require_role("admin", "officer")), db: Session = Depends(get_db)):
     case = crud.get_case(db, case_id)
     if not case:
         raise HTTPException(status_code=404, detail="Case not found")
@@ -513,27 +551,27 @@ def case_referrals(case_id: int, current_user: models.User = Depends(get_current
 DASHBOARD_TAG = "Dashboard & Analytics"
 
 @app.get("/api/dashboard/stats", tags=[DASHBOARD_TAG])
-def dashboard_stats(current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+def dashboard_stats(current_user: models.User = Depends(require_role("admin", "officer")), db: Session = Depends(get_db)):
     return crud.get_dashboard_stats(db)
 
 @app.get("/api/dashboard/monthly", tags=[DASHBOARD_TAG])
-def monthly_stats(year: int = None, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+def monthly_stats(year: int = None, current_user: models.User = Depends(require_role("admin", "officer")), db: Session = Depends(get_db)):
     return crud.get_monthly_stats(db, year)
 
 @app.get("/api/dashboard/priority", tags=[DASHBOARD_TAG])
-def priority_breakdown(current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+def priority_breakdown(current_user: models.User = Depends(require_role("admin", "officer")), db: Session = Depends(get_db)):
     return crud.get_priority_breakdown(db)
 
 @app.get("/api/dashboard/status", tags=[DASHBOARD_TAG])
-def status_breakdown(current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+def status_breakdown(current_user: models.User = Depends(require_role("admin", "officer")), db: Session = Depends(get_db)):
     return crud.get_status_breakdown(db)
 
 @app.get("/api/dashboard/workload", tags=[DASHBOARD_TAG])
-def officer_workload(current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+def officer_workload(current_user: models.User = Depends(require_role("admin", "officer")), db: Session = Depends(get_db)):
     return crud.get_officer_workload(db)
 
 @app.get("/api/dashboard/activity", tags=[DASHBOARD_TAG])
-def recent_activity(limit: int = 10, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+def recent_activity(limit: int = 10, current_user: models.User = Depends(require_role("admin", "officer")), db: Session = Depends(get_db)):
     activities = crud.get_recent_activities(db, limit)
     result = []
     for a in activities:
@@ -567,7 +605,7 @@ EVIDENCE_TAG = "Evidence"
 def upload_evidence(
     case_id: int,
     file: UploadFile = File(...),
-    current_user: models.User = Depends(get_current_user),
+    current_user: models.User = Depends(require_role("admin", "officer")),
     db: Session = Depends(get_db)
 ):
     case = crud.get_case(db, case_id)
@@ -582,7 +620,7 @@ def upload_evidence(
     return ev
 
 @app.get("/api/cases/{case_id}/evidence", tags=[EVIDENCE_TAG])
-def list_evidence(case_id: int, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+def list_evidence(case_id: int, current_user: models.User = Depends(require_role("admin", "officer")), db: Session = Depends(get_db)):
     case = crud.get_case(db, case_id)
     if not case:
         raise HTTPException(status_code=404, detail="Case not found")
@@ -591,7 +629,7 @@ def list_evidence(case_id: int, current_user: models.User = Depends(get_current_
 @app.delete("/api/evidence/{evidence_id}", tags=[EVIDENCE_TAG])
 def delete_evidence(
     evidence_id: int,
-    current_user: models.User = Depends(get_current_user),
+    current_user: models.User = Depends(require_role("admin", "officer")),
     db: Session = Depends(get_db)
 ):
     ev = crud.delete_evidence(db, evidence_id)
@@ -609,24 +647,24 @@ def delete_evidence(
 NOTIF_TAG = "Notifications"
 
 @app.get("/api/notifications", tags=[NOTIF_TAG])
-def list_notifications(role: str = None, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+def list_notifications(role: str = None, current_user: models.User = Depends(require_role("admin", "officer")), db: Session = Depends(get_db)):
     return crud.get_notifications(db, role)
 
 @app.put("/api/notifications/{notif_id}/read", tags=[NOTIF_TAG])
-def mark_read(notif_id: int, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+def mark_read(notif_id: int, current_user: models.User = Depends(require_role("admin", "officer")), db: Session = Depends(get_db)):
     notif = crud.mark_notification_read(db, notif_id)
     if not notif:
         raise HTTPException(status_code=404, detail="Notification not found")
     return notif
 
 @app.get("/api/notifications/unread-count", tags=[NOTIF_TAG])
-def unread_count(role: str = None, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+def unread_count(role: str = None, current_user: models.User = Depends(require_role("admin", "officer")), db: Session = Depends(get_db)):
     return {"count": crud.get_unread_notification_count(db, role)}
 
 @app.delete("/api/notifications/{notif_id}", tags=[NOTIF_TAG])
 def delete_notification(
     notif_id: int,
-    current_user: models.User = Depends(get_current_user),
+    current_user: models.User = Depends(require_role("admin", "officer")),
     db: Session = Depends(get_db)
 ):
     notif = db.query(models.Notification).filter(models.Notification.id == notif_id).first()
@@ -643,14 +681,14 @@ def delete_notification(
 USERS_TAG = "User Management"
 
 @app.get("/api/users", tags=[USERS_TAG])
-def list_users(current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+def list_users(current_user: models.User = Depends(require_role("admin")), db: Session = Depends(get_db)):
     return crud.get_users(db)
 
 @app.put("/api/users/{user_id}", tags=[USERS_TAG])
 def update_user(
     user_id: int,
     update: schemas.UserUpdate,
-    current_user: models.User = Depends(get_current_user),
+    current_user: models.User = Depends(require_role("admin")),
     db: Session = Depends(get_db)
 ):
     user = crud.get_user(db, user_id)
@@ -671,7 +709,7 @@ def update_user(
 @app.delete("/api/users/{user_id}", tags=[USERS_TAG])
 def delete_user(
     user_id: int,
-    current_user: models.User = Depends(get_current_user),
+    current_user: models.User = Depends(require_role("admin")),
     db: Session = Depends(get_db)
 ):
     if current_user.id == user_id:
@@ -693,7 +731,7 @@ REFERRAL_TAG = "Referrals"
 def update_referral_status(
     referral_id: int,
     update: schemas.ReferralUpdate,
-    current_user: models.User = Depends(get_current_user),
+    current_user: models.User = Depends(require_role("admin", "officer")),
     db: Session = Depends(get_db)
 ):
     referral = db.query(models.Referral).filter(models.Referral.id == referral_id).first()

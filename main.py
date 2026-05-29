@@ -253,7 +253,7 @@ def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
         if user.role == "admin":
             if not user.admin_secret or user.admin_secret != ADMIN_SECRET_KEY:
                 raise HTTPException(status_code=403, detail="Invalid admin secret key")
-        else:
+        elif user.role not in ("admin", "officer", "user"):
             user.role = "user"
 
         password_hash = hash_password(user.password)

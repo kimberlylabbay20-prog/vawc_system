@@ -300,7 +300,53 @@ tr.clickable { cursor: pointer; }
 }
 .loading { text-align: center; padding: 40px; color: var(--text-light); }
 .loading i { font-size: 32px; margin-bottom: 8px; }
-</style>
+
+/* ---- DARK MODE ---- */
+[data-theme="dark"] {
+  --bg: #0f0f1a;
+  --card: #1a1a2e;
+  --text: #e8e8e8;
+  --text-light: #9e9e9e;
+  --border: #2a2a4a;
+}
+[data-theme="dark"] body { background: var(--bg); color: var(--text); }
+[data-theme="dark"] .topbar { background: var(--card); }
+[data-theme="dark"] .login-box { background: var(--card); }
+[data-theme="dark"] .login-page { background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%); }
+[data-theme="dark"] .modal { background: var(--card); }
+[data-theme="dark"] .modal-overlay { background: rgba(0,0,0,0.7); }
+[data-theme="dark"] .stat-icon.blue { background: rgba(52,152,219,0.15); }
+[data-theme="dark"] .stat-icon.green { background: rgba(39,174,96,0.15); }
+[data-theme="dark"] .stat-icon.red { background: rgba(231,76,60,0.15); }
+[data-theme="dark"] .stat-icon.orange { background: rgba(243,156,18,0.15); }
+[data-theme="dark"] .stat-icon.purple { background: rgba(142,68,173,0.15); }
+[data-theme="dark"] .stat-icon.teal { background: rgba(26,188,156,0.15); }
+[data-theme="dark"] .analytics-tab { background: #151528; color: var(--text-light); }
+[data-theme="dark"] .analytics-tab:hover { background: #1e1e3a; }
+[data-theme="dark"] .analytics-tab.active { background: var(--accent); color: #fff; }
+[data-theme="dark"] .insight-card { background: #151528; }
+[data-theme="dark"] .activity-feed .activity-item { border-color: var(--border); }
+[data-theme="dark"] .toolbar-left input, [data-theme="dark"] .toolbar-left select { background: var(--card); color: var(--text); border-color: var(--border); }
+[data-theme="dark"] thead { background: #151528; }
+[data-theme="dark"] td { border-color: var(--border); }
+[data-theme="dark"] tr:hover td { background: #151528; }
+[data-theme="dark"] .badge-red { background: rgba(231,76,60,0.15); }
+[data-theme="dark"] .badge-orange { background: rgba(243,156,18,0.15); }
+[data-theme="dark"] .badge-green { background: rgba(39,174,96,0.15); }
+[data-theme="dark"] .badge-blue { background: rgba(52,152,219,0.15); }
+[data-theme="dark"] .badge-gray { background: #151528; }
+[data-theme="dark"] .detail-row { border-color: var(--border); }
+[data-theme="dark"] .timeline-item::before { border-color: var(--card); }
+[data-theme="dark"] .notif-btn:hover { background: #151528; }
+[data-theme="dark"] .btn-outline { border-color: var(--border); color: var(--text); }
+[data-theme="dark"] .btn-outline:hover { background: #151528; }
+[data-theme="dark"] .form-group input, [data-theme="dark"] .form-group select, [data-theme="dark"] .form-group textarea { background: var(--card); color: var(--text); border-color: var(--border); }
+[data-theme="dark"] .dash-assistant-popup { background: var(--card); }
+[data-theme="dark"] .dash-faq-list { background: var(--card); }
+[data-theme="dark"] .dash-chat-msgs { background: var(--card); }
+[data-theme="dark"] .dash-faq-item { border-color: var(--border); }
+[data-theme="dark"] .dash-chat-input-row input { background: var(--card); color: var(--text); border-color: var(--border); }
+
 </head>
 <body>
 
@@ -398,6 +444,9 @@ tr.clickable { cursor: pointer; }
         <button class="notif-btn" onclick="toggleNotifications()">
           <i class="fas fa-bell"></i>
           <span class="notif-badge" id="notifBadge" style="display:none">0</span>
+        </button>
+        <button class="notif-btn" id="darkModeToggle" onclick="toggleDarkMode()" title="Toggle dark mode">
+          <i class="fas fa-moon" id="darkModeIcon"></i>
         </button>
         <span id="currentUserLabel" style="font-size:14px;font-weight:500;color:var(--text)"></span>
       </div>
@@ -499,8 +548,8 @@ tr.clickable { cursor: pointer; }
           <h3 style="font-size:18px"><i class="fas fa-users" style="color:var(--primary)"></i> Registered Officers</h3>
         </div>
         <div class="table-wrap">
-          <table><thead><tr>
-            <th>Name</th><th>Username</th><th>Email</th><th>Role</th><th>Barangay</th><th>Contact</th><th>Status</th><th>Registered</th>
+          <table><thead><tr id="usersTableHeader">
+            <th>Name</th><th>Username</th><th>Email</th><th>Role</th><th>Barangay</th><th>Contact</th><th>Status</th><th>Registered</th><th id="usersActionsHeader" style="display:none">Actions</th>
           </tr></thead><tbody id="usersTableBody"></tbody></table>
         </div>
       </div>
@@ -553,6 +602,11 @@ tr.clickable { cursor: pointer; }
 <div class="modal-overlay" id="notifModal">
   <div class="modal">
     <h3><i class="fas fa-bell" style="color:var(--accent)"></i> Notifications</h3>
+    <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap">
+      <button class="btn btn-sm btn-outline" onclick="refreshNotifications()" title="Refresh"><i class="fas fa-sync"></i></button>
+      <button class="btn btn-sm btn-outline" onclick="markAllNotifRead()"><i class="fas fa-check-double"></i> Mark all read</button>
+      <button class="btn btn-sm btn-outline" id="notifHistoryBtn" onclick="toggleNotifHistory()"><i class="fas fa-history"></i> History</button>
+    </div>
     <div id="notifList"></div>
     <div class="modal-actions">
       <button class="btn btn-outline btn-sm" onclick="closeModal('notifModal')">Close</button>
@@ -668,7 +722,10 @@ async function initApp() {
     const initials=name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
     document.getElementById('userAvatar').textContent=initials;
   }
+  applyDarkModePreference();
   await loadAllData();
+  updateNotifBadge();
+  startNotifPolling();
   initDashboardAssistant();
 }
 
@@ -713,6 +770,29 @@ function switchView(view, el) {
 function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
 function openModal(id) { document.getElementById(id).classList.add('active'); }
 function closeModal(id) { document.getElementById(id).classList.remove('active'); PENDING_ACTION=null; }
+
+// ============ DARK MODE ============
+function toggleDarkMode() {
+  const html=document.documentElement;
+  const isDark=html.getAttribute('data-theme')==='dark';
+  if(isDark) {
+    html.removeAttribute('data-theme');
+    localStorage.setItem('dark_mode','false');
+    document.getElementById('darkModeIcon').className='fas fa-moon';
+  } else {
+    html.setAttribute('data-theme','dark');
+    localStorage.setItem('dark_mode','true');
+    document.getElementById('darkModeIcon').className='fas fa-sun';
+  }
+}
+
+function applyDarkModePreference() {
+  if(localStorage.getItem('dark_mode')==='true') {
+    document.documentElement.setAttribute('data-theme','dark');
+    const icon=document.getElementById('darkModeIcon');
+    if(icon) icon.className='fas fa-sun';
+  }
+}
 
 // ============ DASHBOARD ============
 function renderDashboard(stats,monthly,activity) {
@@ -910,9 +990,17 @@ async function showCaseDetail(caseId) {
   switchView('caseDetail');
   document.getElementById('pageTitle').textContent='Case Detail';
   try {
+    console.log('[showCaseDetail] caseId:', caseId);
     const r=await fetchWithAuth(`/api/cases/${caseId}`);
+    console.log('[showCaseDetail] response status:', r.status);
     const d=await r.json();
+    console.log('[showCaseDetail] response body:', d);
     const c=d.case;
+    if (!c) {
+      console.error('[showCaseDetail] d.case is missing, response:', d);
+      document.getElementById('caseDetailContent').innerHTML='<div class="loading"><i class="fas fa-exclamation-circle" style="color:var(--danger)"></i><p>Error loading case details: '+(d.detail||'Unexpected response')+'</p></div>';
+      return;
+    }
     const badgeClass=c.priority==='HIGH'?'badge-red':c.priority==='MEDIUM'?'badge-orange':'badge-green';
     const statusClass=c.status==='Resolved'||c.status==='Archived'?'badge-green':
       c.status==='Submitted'?'badge-blue':c.status==='Assigned'?'badge-orange':'badge-gray';
@@ -985,7 +1073,7 @@ async function showCaseDetail(caseId) {
           </div>
         </div>
       </div>`;
-  } catch(e) { document.getElementById('caseDetailContent').innerHTML=`<div class="loading"><i class="fas fa-exclamation-circle" style="color:var(--danger)"></i><p>Error loading case</p></div>`; }
+  } catch(e) { console.error('[showCaseDetail] Exception:', e); document.getElementById('caseDetailContent').innerHTML=`<div class="loading"><i class="fas fa-exclamation-circle" style="color:var(--danger)"></i><p>Error loading case</p></div>`; }
 }
 
 // ============ CASE ACTIONS ============
@@ -1099,31 +1187,97 @@ function renderReports(priority,status,workload) {
 
 // ============ USERS ============
 function renderUsers() {
+  const isAdmin=CURRENT_USER&&CURRENT_USER.role==='admin';
+  document.getElementById('usersActionsHeader').style.display=isAdmin?'':'none';
   const tbody=document.getElementById('usersTableBody');
-  tbody.innerHTML=USERS.length===0?'<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--text-light)">No users registered</td></tr>':
-    USERS.map(u=>`<tr>
+  if(USERS.length===0) {
+    tbody.innerHTML='<tr><td colspan="9" style="text-align:center;padding:40px;color:var(--text-light)">No users registered</td></tr>';
+    return;
+  }
+  tbody.innerHTML=USERS.map(u=>{
+    const s=(u.account_status||'approved').toLowerCase();
+    const statusColor=s==='approved'?'badge-green':s==='pending'?'badge-orange':s==='rejected'?'badge-red':'badge-gray';
+    let actions='';
+    if(isAdmin&&CURRENT_USER.id!==u.id) {
+      if(s==='pending') {
+        actions+=`<button class="btn btn-sm btn-success" onclick="handleApproveOfficer(${u.id})" title="Approve"><i class="fas fa-check"></i></button> `;
+        actions+=`<button class="btn btn-sm btn-danger" onclick="handleRejectOfficer(${u.id})" title="Reject"><i class="fas fa-times"></i></button> `;
+      } else if(s==='approved') {
+        actions+=`<button class="btn btn-sm btn-outline" onclick="handleArchiveOfficer(${u.id})" title="Archive"><i class="fas fa-archive"></i></button> `;
+      }
+      actions+=`<button class="btn btn-sm btn-danger" onclick="handleDeleteOfficer(${u.id})" title="Delete"><i class="fas fa-trash"></i></button>`;
+    }
+    return `<tr>
       <td><strong>${u.full_name}</strong></td>
       <td>${u.username}</td>
       <td>${u.email}</td>
       <td><span class="badge ${u.role==='admin'?'badge-red':'badge-blue'}">${u.role}</span></td>
       <td>${u.barangay||'N/A'}</td>
       <td>${u.contact_number||'N/A'}</td>
-      <td><span class="badge ${u.is_active?'badge-green':'badge-gray'}">${u.is_active?'Active':'Inactive'}</span></td>
+      <td><span class="badge ${statusColor}">${s}</span></td>
       <td>${u.created_at?new Date(u.created_at).toLocaleDateString():'N/A'}</td>
-    </tr>`).join('');
+      ${isAdmin?`<td>${actions}</td>`:''}
+    </tr>`;
+  }).join('');
+}
+
+async function handleApproveOfficer(userId) {
+  if(!confirm('Approve this officer?')) return;
+  try {
+    await fetchWithAuth(`/api/users/${userId}/approve`,{method:'POST'});
+    await loadAllData();
+  } catch(e) { alert('Failed to approve officer'); }
+}
+
+async function handleRejectOfficer(userId) {
+  if(!confirm('Reject this officer?')) return;
+  try {
+    await fetchWithAuth(`/api/users/${userId}/reject`,{method:'POST'});
+    await loadAllData();
+  } catch(e) { alert('Failed to reject officer'); }
+}
+
+async function handleArchiveOfficer(userId) {
+  if(!confirm('Archive this officer? They will not be able to login.')) return;
+  try {
+    await fetchWithAuth(`/api/users/${userId}/archive`,{method:'POST'});
+    await loadAllData();
+  } catch(e) { alert('Failed to archive officer'); }
+}
+
+async function handleDeleteOfficer(userId) {
+  if(!confirm('Permanently delete this officer? This cannot be undone.')) return;
+  try {
+    await fetchWithAuth(`/api/users/${userId}/delete`,{method:'DELETE'});
+    await loadAllData();
+  } catch(e) { alert('Failed to delete officer'); }
 }
 
 // ============ NOTIFICATIONS ============
+let NOTIF_HISTORY_MODE = false;
+let NOTIF_POLL_INTERVAL = null;
+
 function renderNotifications() {
   const list=document.getElementById('notifList');
-  list.innerHTML=NOTIFICATIONS.length===0?'<div style="color:var(--text-light);padding:20px;text-align:center">No notifications</div>':
-    NOTIFICATIONS.map(n=>`<div style="padding:12px 0;border-bottom:1px solid #f0f2f5;${n.is_read?'':'background:#f0f7ff;margin:0 -12px;padding:12px'}">
-      <p style="font-size:14px">${n.message}</p>
-      <div style="display:flex;justify-content:space-between;margin-top:4px">
-        <small style="color:var(--text-light)">${n.created_at?new Date(n.created_at).toLocaleString():''}</small>
-        ${!n.is_read?`<button class="btn btn-sm btn-outline" onclick="markNotifRead(${n.id})">Mark read</button>`:''}
+  if(NOTIFICATIONS.length===0) {
+    list.innerHTML='<div style="color:var(--text-light);padding:20px;text-align:center">No notifications</div>';
+    return;
+  }
+  list.innerHTML=NOTIFICATIONS.map(n=>`<div style="padding:12px 0;border-bottom:1px solid #f0f2f5;${n.is_read&&!NOTIF_HISTORY_MODE?'':'background:#f0f7ff;margin:0 -12px;padding:12px'}">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start">
+      <p style="font-size:14px;flex:1">${n.message}</p>
+      ${n.is_archived?'<span style="font-size:11px;color:var(--text-light);white-space:nowrap;margin-left:8px"><i class="fas fa-archive"></i></span>':''}
+      ${n.is_deleted?'<span style="font-size:11px;color:var(--text-light);white-space:nowrap;margin-left:8px"><i class="fas fa-trash"></i></span>':''}
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px">
+      <small style="color:var(--text-light)">${n.created_at?new Date(n.created_at).toLocaleString():''}</small>
+      <div style="display:flex;gap:4px">
+        ${!n.is_read?`<button class="btn btn-sm btn-outline" onclick="markNotifRead(${n.id})" title="Mark as read"><i class="fas fa-check"></i></button>`:''}
+        ${!n.is_archived&&!n.is_deleted?`<button class="btn btn-sm btn-outline" onclick="archiveNotif(${n.id})" title="Archive"><i class="fas fa-archive"></i></button>`:''}
+        ${!n.is_deleted?`<button class="btn btn-sm btn-outline" onclick="deleteNotif(${n.id})" title="Delete" style="color:var(--danger)"><i class="fas fa-trash"></i></button>`:''}
       </div>
-    </div>`).join('');
+    </div>
+  </div>`).join('');
 }
 
 async function markNotifRead(id) {
@@ -1132,15 +1286,66 @@ async function markNotifRead(id) {
   renderNotifications(); updateNotifBadge();
 }
 
-function updateNotifBadge() {
-  const unread=NOTIFICATIONS.filter(n=>!n.is_read).length;
-  const badge=document.getElementById('notifBadge');
-  if(unread>0) { badge.textContent=unread; badge.style.display='flex'; }
-  else badge.style.display='none';
+async function markAllNotifRead() {
+  await fetchWithAuth('/api/notifications/read-all',{method:'PUT'});
+  const r=await fetchWithAuth('/api/notifications'); NOTIFICATIONS=await r.json();
+  renderNotifications(); updateNotifBadge();
+}
+
+async function archiveNotif(id) {
+  await fetchWithAuth(`/api/notifications/${id}/archive`,{method:'PUT'});
+  const r=await fetchWithAuth('/api/notifications'); NOTIFICATIONS=await r.json();
+  renderNotifications(); updateNotifBadge();
+}
+
+async function deleteNotif(id) {
+  if(!confirm('Delete this notification?')) return;
+  await fetchWithAuth(`/api/notifications/${id}`,{method:'DELETE'});
+  const r=await fetchWithAuth('/api/notifications'); NOTIFICATIONS=await r.json();
+  renderNotifications(); updateNotifBadge();
+}
+
+async function toggleNotifHistory() {
+  NOTIF_HISTORY_MODE = !NOTIF_HISTORY_MODE;
+  const btn=document.getElementById('notifHistoryBtn');
+  if(NOTIF_HISTORY_MODE) {
+    btn.innerHTML='<i class="fas fa-bell"></i> Current';
+    const r=await fetchWithAuth('/api/notifications/history');
+    NOTIFICATIONS=await r.json();
+  } else {
+    btn.innerHTML='<i class="fas fa-history"></i> History';
+    const r=await fetchWithAuth('/api/notifications');
+    NOTIFICATIONS=await r.json();
+  }
+  renderNotifications();
+}
+
+async function refreshNotifications() {
+  const r=await fetchWithAuth('/api/notifications');
+  NOTIFICATIONS=await r.json();
+  renderNotifications(); updateNotifBadge();
+}
+
+async function updateNotifBadge() {
+  try {
+    const r=await fetchWithAuth('/api/notifications/unread-count');
+    const data=await r.json();
+    const unread=data.count||0;
+    const badge=document.getElementById('notifBadge');
+    if(unread>0) { badge.textContent=unread; badge.style.display='flex'; }
+    else badge.style.display='none';
+  } catch(e) { console.error('badge error',e); }
 }
 
 function toggleNotifications() {
-  renderNotifications(); openModal('notifModal');
+  NOTIF_HISTORY_MODE = false;
+  document.getElementById('notifHistoryBtn').innerHTML='<i class="fas fa-history"></i> History';
+  refreshNotifications(); openModal('notifModal');
+}
+
+function startNotifPolling() {
+  if(NOTIF_POLL_INTERVAL) clearInterval(NOTIF_POLL_INTERVAL);
+  NOTIF_POLL_INTERVAL=setInterval(updateNotifBadge,30000);
 }
 
 // ============ DASHBOARD CARD INTERACTIONS ============

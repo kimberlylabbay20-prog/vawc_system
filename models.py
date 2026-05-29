@@ -101,6 +101,8 @@ class Notification(Base):
     message = Column(Text, nullable=False)
     recipient_role = Column(String(50), nullable=False)
     is_read = Column(Boolean, default=False)
+    is_archived = Column(Boolean, default=False)
+    is_deleted = Column(Boolean, default=False)
     created_at = Column(TIMESTAMP, server_default=func.now())
 
     case = relationship("Report", back_populates="notifications", foreign_keys=[case_id])

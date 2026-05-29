@@ -188,11 +188,19 @@ def create_notification(db: Session, case_id: int, message: str, recipient_role:
     db.refresh(notif)
     return notif
 
-def get_notifications(db: Session, role: str = None, limit: int = 20):
-    query = db.query(models.Notification).order_by(models.Notification.created_at.desc())
+def get_notifications(db: Session, role: str = None, limit: int = 50):
+    query = db.query(models.Notification).filter(
+        models.Notification.is_deleted == False
+    ).order_by(models.Notification.created_at.desc())
     if role:
         query = query.filter(models.Notification.recipient_role.in_([role, "all"]))
     return query.limit(limit).all()
+
+def get_notification_history(db: Session, role: str = None, offset: int = 0, limit: int = 50):
+    query = db.query(models.Notification).order_by(models.Notification.created_at.desc())
+    if role:
+        query = query.filter(models.Notification.recipient_role.in_([role, "all"]))
+    return query.offset(offset).limit(limit).all()
 
 def mark_notification_read(db: Session, notif_id: int):
     notif = db.query(models.Notification).filter(models.Notification.id == notif_id).first()
@@ -201,8 +209,32 @@ def mark_notification_read(db: Session, notif_id: int):
         db.commit()
     return notif
 
-def get_unread_notification_count(db: Session, role: str = None):
+def mark_all_notifications_read(db: Session, role: str = None):
     query = db.query(models.Notification).filter(models.Notification.is_read == False)
+    if role:
+        query = query.filter(models.Notification.recipient_role.in_([role, "all"]))
+    query.update({models.Notification.is_read: True})
+    db.commit()
+
+def archive_notification(db: Session, notif_id: int):
+    notif = db.query(models.Notification).filter(models.Notification.id == notif_id).first()
+    if notif:
+        notif.is_archived = True
+        db.commit()
+    return notif
+
+def delete_notification(db: Session, notif_id: int):
+    notif = db.query(models.Notification).filter(models.Notification.id == notif_id).first()
+    if notif:
+        notif.is_deleted = True
+        db.commit()
+    return notif
+
+def get_unread_notification_count(db: Session, role: str = None):
+    query = db.query(models.Notification).filter(
+        models.Notification.is_read == False,
+        models.Notification.is_deleted == False
+    )
     if role:
         query = query.filter(models.Notification.recipient_role.in_([role, "all"]))
     return query.count()
@@ -299,7 +331,10 @@ def get_dashboard_stats(db: Session) -> dict:
     ).count()
     pending = db.query(models.Report).filter(models.Report.status == "Submitted").count()
     officers = db.query(models.User).filter(models.User.is_active == True).count()
-    unread = db.query(models.Notification).filter(models.Notification.is_read == False).count()
+    unread = db.query(models.Notification).filter(
+        models.Notification.is_read == False,
+        models.Notification.is_deleted == False
+    ).count()
 
     return {
         "total_cases": total,

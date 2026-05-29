@@ -14,6 +14,7 @@ import bcrypt as _bcrypt
 import models, schemas, crud
 import logging
 from database import engine, SessionLocal, Base
+from email_utils import send_officer_registration_email
 
 logger = logging.getLogger(__name__)
 
@@ -267,9 +268,15 @@ def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
             from database import SessionLocal
             notif_db = SessionLocal()
             try:
-                crud.create_notification(notif_db, 0, "New officer registration request", "admin")
+                crud.create_notification(notif_db, None, "New officer registration request", "admin")
             finally:
                 notif_db.close()
+            send_officer_registration_email(
+                full_name=user.full_name,
+                username=user.username,
+                email=user.email,
+                barangay=user.barangay
+            )
 
         token = create_access_token({"user_id": db_user.id, "role": db_user.role})
         return {
@@ -323,6 +330,8 @@ def login(credentials: schemas.LoginRequest, db: Session = Depends(get_db)):
             raise HTTPException(status_code=403, detail="Account awaiting admin approval")
         if status == "rejected":
             raise HTTPException(status_code=403, detail="Account request rejected")
+        if status == "archived":
+            raise HTTPException(status_code=403, detail="Account has been archived")
 
         token = create_access_token({"user_id": user.id, "role": user.role})
         logger.info("Successful login: %s (role=%s)", user.username, user.role)
@@ -670,8 +679,8 @@ def delete_evidence(
 NOTIF_TAG = "Notifications"
 
 @app.get("/api/notifications", tags=[NOTIF_TAG])
-def list_notifications(role: str = None, current_user: models.User = Depends(require_role("admin", "officer")), db: Session = Depends(get_db)):
-    return crud.get_notifications(db, role)
+def list_notifications(current_user: models.User = Depends(require_role("admin", "officer")), db: Session = Depends(get_db)):
+    return crud.get_notifications(db, role=current_user.role)
 
 @app.put("/api/notifications/{notif_id}/read", tags=[NOTIF_TAG])
 def mark_read(notif_id: int, current_user: models.User = Depends(require_role("admin", "officer")), db: Session = Depends(get_db)):
@@ -680,9 +689,34 @@ def mark_read(notif_id: int, current_user: models.User = Depends(require_role("a
         raise HTTPException(status_code=404, detail="Notification not found")
     return notif
 
+@app.put("/api/notifications/read-all", tags=[NOTIF_TAG])
+def mark_all_read(current_user: models.User = Depends(require_role("admin", "officer")), db: Session = Depends(get_db)):
+    crud.mark_all_notifications_read(db, role=current_user.role)
+    return {"message": "All notifications marked as read"}
+
 @app.get("/api/notifications/unread-count", tags=[NOTIF_TAG])
-def unread_count(role: str = None, current_user: models.User = Depends(require_role("admin", "officer")), db: Session = Depends(get_db)):
-    return {"count": crud.get_unread_notification_count(db, role)}
+def unread_count(current_user: models.User = Depends(require_role("admin", "officer")), db: Session = Depends(get_db)):
+    return {"count": crud.get_unread_notification_count(db, role=current_user.role)}
+
+@app.get("/api/notifications/history", tags=[NOTIF_TAG])
+def notification_history(
+    offset: int = 0,
+    limit: int = 50,
+    current_user: models.User = Depends(require_role("admin", "officer")),
+    db: Session = Depends(get_db)
+):
+    return crud.get_notification_history(db, role=current_user.role, offset=offset, limit=limit)
+
+@app.put("/api/notifications/{notif_id}/archive", tags=[NOTIF_TAG])
+def archive_notification(
+    notif_id: int,
+    current_user: models.User = Depends(require_role("admin", "officer")),
+    db: Session = Depends(get_db)
+):
+    notif = crud.archive_notification(db, notif_id)
+    if not notif:
+        raise HTTPException(status_code=404, detail="Notification not found")
+    return notif
 
 @app.delete("/api/notifications/{notif_id}", tags=[NOTIF_TAG])
 def delete_notification(
@@ -690,11 +724,9 @@ def delete_notification(
     current_user: models.User = Depends(require_role("admin", "officer")),
     db: Session = Depends(get_db)
 ):
-    notif = db.query(models.Notification).filter(models.Notification.id == notif_id).first()
+    notif = crud.delete_notification(db, notif_id)
     if not notif:
         raise HTTPException(status_code=404, detail="Notification not found")
-    db.delete(notif)
-    db.commit()
     return {"message": "Notification deleted"}
 
 # =====================================================================
@@ -775,6 +807,40 @@ def reject_user(
     db.refresh(user)
     logger.info("Officer rejected: %s", user.username)
     return {"message": "Officer rejected", "user_id": user_id, "username": user.username}
+
+@app.post("/api/users/{user_id}/archive", tags=[USERS_TAG])
+def archive_user(
+    user_id: int,
+    current_user: models.User = Depends(require_role("admin")),
+    db: Session = Depends(get_db)
+):
+    user = crud.get_user(db, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    if current_user.id == user_id:
+        raise HTTPException(status_code=400, detail="Cannot archive yourself")
+    user.account_status = "archived"
+    user.is_active = False
+    db.commit()
+    db.refresh(user)
+    logger.info("Officer archived: %s", user.username)
+    return {"message": "Officer archived", "user_id": user_id, "username": user.username}
+
+@app.delete("/api/users/{user_id}/delete", tags=[USERS_TAG])
+def hard_delete_user(
+    user_id: int,
+    current_user: models.User = Depends(require_role("admin")),
+    db: Session = Depends(get_db)
+):
+    if current_user.id == user_id:
+        raise HTTPException(status_code=400, detail="Cannot delete yourself")
+    user = crud.get_user(db, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    db.delete(user)
+    db.commit()
+    logger.info("Officer deleted: %s (id=%d)", user.username, user_id)
+    return {"message": "Officer deleted", "user_id": user_id}
 
 # =====================================================================
 # REFERRALS

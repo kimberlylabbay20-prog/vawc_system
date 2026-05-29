@@ -15,6 +15,7 @@ class User(Base):
     role = Column(String(50), default="officer")
     barangay = Column(String(200), nullable=True)
     contact_number = Column(String(50), nullable=True)
+    account_status = Column(String(20), default="approved")
     is_active = Column(Boolean, default=True)
     created_at = Column(TIMESTAMP, server_default=func.now())
 

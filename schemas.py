@@ -94,6 +94,7 @@ class UserResponse(BaseModel):
     email: str
     full_name: str
     role: str
+    account_status: str = "approved"
     barangay: Optional[str] = None
     contact_number: Optional[str] = None
     is_active: bool

@@ -258,6 +258,19 @@ def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
 
         password_hash = hash_password(user.password)
         db_user = crud.create_user(db, user, password_hash)
+
+        if user.role == "officer":
+            db_user.account_status = "pending"
+            db_user.is_active = False
+            db.commit()
+            db.refresh(db_user)
+            from database import SessionLocal
+            notif_db = SessionLocal()
+            try:
+                crud.create_notification(notif_db, 0, "New officer registration request", "admin")
+            finally:
+                notif_db.close()
+
         token = create_access_token({"user_id": db_user.id, "role": db_user.role})
         return {
             "access_token": token,
@@ -268,6 +281,7 @@ def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
                 "email": db_user.email,
                 "full_name": db_user.full_name,
                 "role": db_user.role,
+                "account_status": db_user.account_status,
                 "barangay": db_user.barangay,
                 "contact_number": db_user.contact_number,
                 "is_active": db_user.is_active,
@@ -303,6 +317,13 @@ def login(credentials: schemas.LoginRequest, db: Session = Depends(get_db)):
             raise HTTPException(status_code=401, detail="Invalid username or password")
 
         failed_login_attempts.pop(credentials.username, None)
+
+        status = (user.account_status or "approved").lower()
+        if status == "pending":
+            raise HTTPException(status_code=403, detail="Account awaiting admin approval")
+        if status == "rejected":
+            raise HTTPException(status_code=403, detail="Account request rejected")
+
         token = create_access_token({"user_id": user.id, "role": user.role})
         logger.info("Successful login: %s (role=%s)", user.username, user.role)
         return {
@@ -314,6 +335,7 @@ def login(credentials: schemas.LoginRequest, db: Session = Depends(get_db)):
                 "email": user.email,
                 "full_name": user.full_name,
                 "role": user.role,
+                "account_status": user.account_status,
                 "barangay": user.barangay,
                 "contact_number": user.contact_number,
                 "is_active": user.is_active,
@@ -334,6 +356,7 @@ def get_me(current_user: models.User = Depends(get_current_user)):
         "email": current_user.email,
         "full_name": current_user.full_name,
         "role": current_user.role,
+        "account_status": current_user.account_status,
         "barangay": current_user.barangay,
         "contact_number": current_user.contact_number,
         "is_active": current_user.is_active,
@@ -720,6 +743,38 @@ def delete_user(
     user.is_active = False
     db.commit()
     return {"message": "User deactivated", "user_id": user_id}
+
+@app.post("/api/users/{user_id}/approve", tags=[USERS_TAG])
+def approve_user(
+    user_id: int,
+    current_user: models.User = Depends(require_role("admin")),
+    db: Session = Depends(get_db)
+):
+    user = crud.get_user(db, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    user.account_status = "approved"
+    user.is_active = True
+    db.commit()
+    db.refresh(user)
+    logger.info("Officer approved: %s", user.username)
+    return {"message": "Officer approved", "user_id": user_id, "username": user.username}
+
+@app.post("/api/users/{user_id}/reject", tags=[USERS_TAG])
+def reject_user(
+    user_id: int,
+    current_user: models.User = Depends(require_role("admin")),
+    db: Session = Depends(get_db)
+):
+    user = crud.get_user(db, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    user.account_status = "rejected"
+    user.is_active = False
+    db.commit()
+    db.refresh(user)
+    logger.info("Officer rejected: %s", user.username)
+    return {"message": "Officer rejected", "user_id": user_id, "username": user.username}
 
 # =====================================================================
 # REFERRALS

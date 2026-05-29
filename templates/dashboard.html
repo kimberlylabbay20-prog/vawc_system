@@ -712,21 +712,26 @@ function handleLogout() { TOKEN=''; localStorage.removeItem('vawc_token'); CURRE
 
 // ============ INIT ============
 async function initApp() {
-  document.getElementById('loginPage').style.display='none';
-  document.getElementById('appContainer').classList.add('active');
-  if(CURRENT_USER) {
-    const name=CURRENT_USER.full_name||CURRENT_USER.username;
-    document.getElementById('userName').textContent=name;
-    document.getElementById('userRole').textContent=CURRENT_USER.role;
-    document.getElementById('currentUserLabel').textContent=name;
-    const initials=name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
-    document.getElementById('userAvatar').textContent=initials;
+  try {
+    document.getElementById('loginPage').style.display='none';
+    document.getElementById('appContainer').classList.add('active');
+    if(CURRENT_USER) {
+      const name=CURRENT_USER.full_name||CURRENT_USER.username;
+      document.getElementById('userName').textContent=name;
+      document.getElementById('userRole').textContent=CURRENT_USER.role;
+      document.getElementById('currentUserLabel').textContent=name;
+      const initials=name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+      document.getElementById('userAvatar').textContent=initials;
+    }
+    try { applyDarkModePreference(); } catch(e) { console.error('dark mode error',e); }
+    await loadAllData();
+    try { updateNotifBadge(); } catch(e) { console.error('badge error',e); }
+    try { startNotifPolling(); } catch(e) { console.error('polling error',e); }
+    try { initDashboardAssistant(); } catch(e) { console.error('assistant error',e); }
+  } catch(e) {
+    console.error('init error',e);
+    document.getElementById('loginPage').style.display='flex';
   }
-  applyDarkModePreference();
-  await loadAllData();
-  updateNotifBadge();
-  startNotifPolling();
-  initDashboardAssistant();
 }
 
 async function loadAllData() {

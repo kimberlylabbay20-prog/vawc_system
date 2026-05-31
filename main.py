@@ -424,53 +424,85 @@ def list_cases(
 
 @app.get("/api/cases/{case_id}", tags=[CASES_TAG])
 def get_case_detail(case_id: int, current_user: models.User = Depends(require_role("admin", "officer")), db: Session = Depends(get_db)):
-    case = crud.get_case(db, case_id)
+    import traceback
+    case = None
+    try:
+        case = crud.get_case(db, case_id)
+    except Exception as e:
+        logger.error("get_case_detail: crud.get_case failed for case_id=%s: %s", case_id, e)
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Database error: {type(e).__name__}")
     if not case:
         raise HTTPException(status_code=404, detail="Case not found")
     officer_name = None
     if case.assigned_to:
-        user = crud.get_user(db, case.assigned_to)
-        if user:
-            officer_name = user.full_name
-    activities = crud.get_case_activities(db, case_id)
-    referrals = crud.get_case_referrals(db, case_id)
-    return {
-        "case": {
-            "id": case.id,
-            "case_id": case.case_id,
-            "victim_name": case.victim_name,
-            "contact_number": case.contact_number,
-            "incident_type": case.incident_type,
-            "description": case.description,
-            "location": case.location,
-            "status": case.status,
-            "priority": case.priority,
-            "assigned_to": case.assigned_to,
-            "assigned_to_name": officer_name,
-            "file_path": case.file_path,
-            "case_notes": case.case_notes,
-            "resolution_notes": case.resolution_notes,
-            "date_reported": case.date_reported.isoformat() if case.date_reported else None,
-            "updated_at": case.updated_at.isoformat() if case.updated_at else None
-        },
-        "activities": [
-            {
-                "id": a.id,
-                "action": a.action,
-                "notes": a.notes,
-                "created_at": a.created_at.isoformat() if a.created_at else None
-            } for a in activities
-        ],
-        "referrals": [
-            {
-                "id": r.id,
-                "referred_to": r.referred_to,
-                "reason": r.reason,
-                "status": r.status,
-                "created_at": r.created_at.isoformat() if r.created_at else None
-            } for r in referrals
-        ]
-    }
+        try:
+            user = crud.get_user(db, case.assigned_to)
+            if user:
+                officer_name = user.full_name
+        except Exception as e:
+            logger.error("get_case_detail: crud.get_user failed for user_id=%s: %s", case.assigned_to, e)
+    try:
+        activities = crud.get_case_activities(db, case_id)
+    except Exception as e:
+        logger.error("get_case_detail: get_case_activities failed for case_id=%s: %s", case_id, e)
+        traceback.print_exc()
+        activities = []
+    try:
+        referrals = crud.get_case_referrals(db, case_id)
+    except Exception as e:
+        logger.error("get_case_detail: get_case_referrals failed for case_id=%s: %s", case_id, e)
+        traceback.print_exc()
+        referrals = []
+    try:
+        def safe_dt(val):
+            if val is None:
+                return None
+            try:
+                return val.isoformat()
+            except Exception:
+                return str(val)
+        return {
+            "case": {
+                "id": case.id,
+                "case_id": case.case_id,
+                "victim_name": case.victim_name,
+                "contact_number": case.contact_number,
+                "incident_type": case.incident_type,
+                "description": case.description,
+                "location": case.location,
+                "status": case.status,
+                "priority": case.priority,
+                "assigned_to": case.assigned_to,
+                "assigned_to_name": officer_name,
+                "file_path": case.file_path,
+                "case_notes": case.case_notes,
+                "resolution_notes": case.resolution_notes,
+                "date_reported": safe_dt(case.date_reported),
+                "updated_at": safe_dt(case.updated_at)
+            },
+            "activities": [
+                {
+                    "id": a.id,
+                    "action": a.action,
+                    "notes": a.notes,
+                    "created_at": safe_dt(a.created_at)
+                } for a in activities
+            ],
+            "referrals": [
+                {
+                    "id": r.id,
+                    "referred_to": r.referred_to,
+                    "reason": r.reason,
+                    "status": r.status,
+                    "created_at": safe_dt(r.created_at)
+                } for r in referrals
+            ]
+        }
+    except Exception as e:
+        logger.error("get_case_detail: response construction failed for case_id=%s: %s", case_id, e)
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Error loading case: {type(e).__name__}")
 
 @app.put("/api/cases/{case_id}", tags=[CASES_TAG])
 def update_case(

@@ -168,7 +168,6 @@ def log_activity(db: Session, case_id: int, action: str, performed_by: int = Non
     db.commit()
 
 def get_case_activities(db: Session, case_id: int):
-    # Resolve Report.id → Case.id for lookup
     case = db.query(models.Case).filter(models.Case.report_id == case_id).first()
     actual_case_id = case.id if case else case_id
     return db.query(models.CaseActivity).filter(

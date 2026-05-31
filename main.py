@@ -212,7 +212,7 @@ def submit_report(
     db.refresh(new_case)
 
     crud.log_activity(db, new_case.id, "Case submitted", None)
-    crud.create_notification(db, new_report.id, f"New {priority} priority case: {case_id}", "admin")
+    crud.create_notification(db, new_report.id, f"New {priority} priority case: {case_id}", "all")
 
     if priority == "HIGH":
         crud.create_notification(db, new_report.id, f"URGENT case {case_id} requires immediate attention", "all")

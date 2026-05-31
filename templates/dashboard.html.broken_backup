@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -1169,12 +1168,12 @@
       border-color: var(--border);
     }
 
-    </style></head><body><div class="login-page" id="loginPage"><div class="login-box"><div class="logo"><i class="fas fa-balance-scale"></i></div><h1>Barangay VAWC</h1><p>Case Management System</p><div id="loginForm"><div class="error-msg" id="loginError"></div><div class="form-group"><label>Username</label><input type="text" id="loginUsername" placeholder="Enter username"></div><div class="form-group"><label>Password</label><input type="password" id="loginPassword" placeholder="Enter password"></div><button class="btn btn-primary btn-block" onclick="handleLogin()"><i class="fas fa-sign-in-alt"></i>Sign In</button><div class="auth-toggle">No account? <a onclick="showRegister()">Register here</a></div></div><div id="registerForm" style="display:none"><div class="error-msg" id="registerError"></div><div class="form-group"><label>Full Name</label><input type="text" id="regFullName" placeholder="e.g. Juan Dela Cruz"></div><div class="form-group"><label>Username</label><input type="text" id="regUsername" placeholder="Choose a username"></div><div class="form-group"><label>Email</label><input type="email" id="regEmail" placeholder="email@example.com"></div><div class="form-group"><label>Password</label><input type="password" id="regPassword" placeholder="Create a password"></div><div class="form-group"><label>Role</label><select id="regRole"><option value="officer">Barangay Officer</option><option value="admin">Admin</option></select></div><div class="form-group"><label>Barangay</label><input type="text" id="regBarangay" placeholder="e.g. Barangay 5"></div><div class="form-group"><label>Contact Number</label><input type="text" id="regContact" placeholder="09123456789"></div><button class="btn btn-accent btn-block" onclick="handleRegister()"><i class="fas fa-user-plus"></i>Register</button><div class="auth-toggle">Already have an account? <a onclick="showLogin()">Sign in</a></div></div></div></div><!--============MAIN APP============--><div class="app-container" id="appContainer"><!-- SIDEBAR --><aside class="sidebar" id="sidebar"><div class="sidebar-header"><i class="fas fa-balance-scale"></i><div><h2>VAWC System</h2><small>Case Management</small></div></div><nav class="sidebar-nav"><div class="nav-item active" onclick="switchView('dashboard',this)"><i class="fas fa-chart-pie"></i>Dashboard</div><div class="nav-item" onclick="switchView('cases',this)"><i class="fas fa-folder-open"></i>Cases</div><div class="nav-item" onclick="switchView('reports',this)"><i class="fas fa-file-alt"></i>Reports</div><div class="nav-item" onclick="switchView('users',this)"><i class="fas fa-users"></i>Officers</div><div class="nav-item" onclick="window.open('/report','_blank')"><i class="fas fa-plus-circle"></i>New Report</div></nav><div class="sidebar-footer"><div class="user-avatar" id="userAvatar">JD</div><div class="user-info"><div id="userName">User</div><small id="userRole">Officer</small></div><i class="fas fa-sign-out-alt logout-btn" onclick="handleLogout()"></i></div></aside><!-- MAIN --><main class="main-content"><header class="topbar"><div class="topbar-left"><button class="menu-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button><h3 id="pageTitle">Dashboard</h3></div><div class="topbar-right"><button class="notif-btn" onclick="toggleNotifications()"><i class="fas fa-bell"></i><span class="notif-badge" id="notifBadge" style="display:none">0</span></button><button class="notif-btn" id="darkModeToggle" onclick="toggleDarkMode()" title="Toggle dark mode"><i class="fas fa-moon" id="darkModeIcon"></i></button><span id="currentUserLabel" style="font-size:14px;font-weight:500;color:var(--text)"></span></div></header><div class="content-area"><!--======DASHBOARD VIEW======--><div class="page-section active" id="viewDashboard"><div class="stats-grid" id="statsGrid"></div><div class="dashboard-grid"><div class="chart-card" id="analyticsCard"><div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:16px"><h3 style="margin-bottom:0"><i class="fas fa-calendar-alt" style="color:var(--accent)"></i>Monthly Cases</h3><span style="font-size:12px;color:var(--text-light)">VAWC Case Analytics Overview</span></div><div class="analytics-tabs" id="analyticsTabs"><span class="analytics-tab active" data-tab="monthly" onclick="filterAnalytics('monthly')">Monthly</span><span class="analytics-tab" data-tab="weekly" onclick="filterAnalytics('weekly')">Weekly</span><span class="analytics-tab" data-tab="urgent" onclick="filterAnalytics('urgent')">Urgent</span><span class="analytics-tab" data-tab="resolved" onclick="filterAnalytics('resolved')">Resolved</span></div><div style="position:relative;width:100%;min-height:180px"><canvas id="analyticsChart"></canvas></div><div class="analytics-insights" id="analyticsInsights"></div></div><div class="chart-card"><h3><i class="fas fa-clock" style="color:var(--warning)"></i>Recent Activity</h3><div class="activity-feed" id="activityFeed"></div></div></div></div><!--======CASES VIEW======--><div class="page-section" id="viewCases"><div class="toolbar"><div class="toolbar-left"><input type="text" id="caseSearch" placeholder="Search cases..." oninput="renderCases()"><select id="filterStatus" onchange="renderCases()"><option value="">All Status</option><option value="Submitted">Submitted</option><option value="Assigned">Assigned</option><option value="Ongoing">Ongoing</option><option value="Monitoring">Monitoring</option><option value="Resolved">Resolved</option><option value="Archived">Archived</option></select><select id="filterPriority" onchange="renderCases()"><option value="">All Priority</option><option value="HIGH">HIGH</option><option value="MEDIUM">MEDIUM</option><option value="LOW">LOW</option></select></div><button class="btn btn-accent btn-sm" onclick="window.open('/report','_blank')"><i class="fas fa-plus"></i>New Case </button></div><div class="table-wrap"><table><thead><tr><th>Case ID</th><th>Victim</th><th>Incident</th><th>Priority</th><th>Status</th><th>Assigned To</th><th>Date</th></tr></thead><tbody id="casesTableBody"></tbody></table></div></div><!--======CASE DETAIL======--><div class="page-section" id="viewCaseDetail"><button class="btn btn-outline btn-sm" onclick="switchView('cases')" style="margin-bottom:12px"><i class="fas fa-arrow-left"></i>Back to Cases </button><div id="caseDetailContent"></div></div><!--======REPORTS VIEW======--><div class="page-section" id="viewReports"><div class="stats-grid" id="reportStatsGrid"></div><div class="reports-grid"><div class="chart-placeholder"><h4><i class="fas fa-chart-bar" style="color:var(--accent)"></i>Priority Distribution</h4><div id="priorityChart" class="bar-chart" style="height:140px;align-items:flex-end"></div></div><div class="chart-placeholder"><h4><i class="fas fa-check-circle" style="color:var(--success)"></i>Status Distribution</h4><div id="statusChart" class="bar-chart" style="height:140px;align-items:flex-end"></div></div></div><div class="chart-placeholder"><h4><i class="fas fa-users" style="color:var(--primary)"></i>Officer Workload</h4><div class="table-wrap"><table><thead><tr><th>Officer</th><th>Assigned</th><th>Active</th><th>Resolved</th></tr></thead><tbody id="workloadBody"></tbody></table></div></div></div><!--======USERS VIEW======--><div class="page-section" id="viewUsers"><div class="toolbar"><h3 style="font-size:18px"><i class="fas fa-users" style="color:var(--primary)"></i>Registered Officers</h3></div><div class="table-wrap"><table><thead><tr id="usersTableHeader"><th>Name</th><th>Username</th><th>Email</th><th>Role</th><th>Barangay</th><th>Contact</th><th>Status</th><th>Registered</th><th id="usersActionsHeader" style="display:none">Actions</th></tr></thead><tbody id="usersTableBody"></tbody></table></div></div></div></main></div><!--============VAWC ASSISTANT============--><div class="dash-assistant-fab" id="dashAssistantFab" onclick="toggleVAWCAssistant()" title="VAWC Assistant"><i class="fas fa-comment-dots"></i><span class="dash-fab-label">VAWC Assistant</span></div><div class="dash-assistant-popup" id="dashAssistantPopup"><div class="dash-popup-header"><div class="dash-popup-title"><i class="fas fa-shield-halved"></i>VAWC Awareness </div><div class="dash-lang-toggle"><span class="dash-lang-opt active" data-lang="en" onclick="toggleLanguage('en')">EN</span><span class="dash-lang-div">|</span><span class="dash-lang-opt" data-lang="tl" onclick="toggleLanguage('tl')">TL</span></div><button class="dash-popup-close" onclick="toggleVAWCAssistant()">&times;
+    </head><body><div class="login-page" id="loginPage"><div class="login-box"><div class="logo"><i class="fas fa-balance-scale"></i></div><h1>Barangay VAWC</h1><p>Case Management System</p><div id="loginForm"><div class="error-msg" id="loginError"></div><div class="form-group"><label>Username</label><input type="text" id="loginUsername" placeholder="Enter username"></div><div class="form-group"><label>Password</label><input type="password" id="loginPassword" placeholder="Enter password"></div><button class="btn btn-primary btn-block" onclick="handleLogin()"><i class="fas fa-sign-in-alt"></i>Sign In</button><div class="auth-toggle">No account? <a onclick="showRegister()">Register here</a></div></div><div id="registerForm" style="display:none"><div class="error-msg" id="registerError"></div><div class="form-group"><label>Full Name</label><input type="text" id="regFullName" placeholder="e.g. Juan Dela Cruz"></div><div class="form-group"><label>Username</label><input type="text" id="regUsername" placeholder="Choose a username"></div><div class="form-group"><label>Email</label><input type="email" id="regEmail" placeholder="email@example.com"></div><div class="form-group"><label>Password</label><input type="password" id="regPassword" placeholder="Create a password"></div><div class="form-group"><label>Role</label><select id="regRole"><option value="officer">Barangay Officer</option><option value="admin">Admin</option></select></div><div class="form-group"><label>Barangay</label><input type="text" id="regBarangay" placeholder="e.g. Barangay 5"></div><div class="form-group"><label>Contact Number</label><input type="text" id="regContact" placeholder="09123456789"></div><button class="btn btn-accent btn-block" onclick="handleRegister()"><i class="fas fa-user-plus"></i>Register</button><div class="auth-toggle">Already have an account? <a onclick="showLogin()">Sign in</a></div></div></div></div>< !--============MAIN APP============--><div class="app-container" id="appContainer">< !-- SIDEBAR --><aside class="sidebar" id="sidebar"><div class="sidebar-header"><i class="fas fa-balance-scale"></i><div><h2>VAWC System</h2><small>Case Management</small></div></div><nav class="sidebar-nav"><div class="nav-item active" onclick="switchView('dashboard',this)"><i class="fas fa-chart-pie"></i>Dashboard</div><div class="nav-item" onclick="switchView('cases',this)"><i class="fas fa-folder-open"></i>Cases</div><div class="nav-item" onclick="switchView('reports',this)"><i class="fas fa-file-alt"></i>Reports</div><div class="nav-item" onclick="switchView('users',this)"><i class="fas fa-users"></i>Officers</div><div class="nav-item" onclick="window.open('/report','_blank')"><i class="fas fa-plus-circle"></i>New Report</div></nav><div class="sidebar-footer"><div class="user-avatar" id="userAvatar">JD</div><div class="user-info"><div id="userName">User</div><small id="userRole">Officer</small></div><i class="fas fa-sign-out-alt logout-btn" onclick="handleLogout()"></i></div></aside>< !-- MAIN --><main class="main-content"><header class="topbar"><div class="topbar-left"><button class="menu-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button><h3 id="pageTitle">Dashboard</h3></div><div class="topbar-right"><button class="notif-btn" onclick="toggleNotifications()"><i class="fas fa-bell"></i><span class="notif-badge" id="notifBadge" style="display:none">0</span></button><button class="notif-btn" id="darkModeToggle" onclick="toggleDarkMode()" title="Toggle dark mode"><i class="fas fa-moon" id="darkModeIcon"></i></button><span id="currentUserLabel" style="font-size:14px;font-weight:500;color:var(--text)"></span></div></header><div class="content-area">< !--======DASHBOARD VIEW======--><div class="page-section active" id="viewDashboard"><div class="stats-grid" id="statsGrid"></div><div class="dashboard-grid"><div class="chart-card" id="analyticsCard"><div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:16px"><h3 style="margin-bottom:0"><i class="fas fa-calendar-alt" style="color:var(--accent)"></i>Monthly Cases</h3><span style="font-size:12px;color:var(--text-light)">VAWC Case Analytics Overview</span></div><div class="analytics-tabs" id="analyticsTabs"><span class="analytics-tab active" data-tab="monthly" onclick="filterAnalytics('monthly')">Monthly</span><span class="analytics-tab" data-tab="weekly" onclick="filterAnalytics('weekly')">Weekly</span><span class="analytics-tab" data-tab="urgent" onclick="filterAnalytics('urgent')">Urgent</span><span class="analytics-tab" data-tab="resolved" onclick="filterAnalytics('resolved')">Resolved</span></div><div style="position:relative;width:100%;min-height:180px"><canvas id="analyticsChart"></canvas></div><div class="analytics-insights" id="analyticsInsights"></div></div><div class="chart-card"><h3><i class="fas fa-clock" style="color:var(--warning)"></i>Recent Activity</h3><div class="activity-feed" id="activityFeed"></div></div></div></div>< !--======CASES VIEW======--><div class="page-section" id="viewCases"><div class="toolbar"><div class="toolbar-left"><input type="text" id="caseSearch" placeholder="Search cases..." oninput="renderCases()"><select id="filterStatus" onchange="renderCases()"><option value="">All Status</option><option value="Submitted">Submitted</option><option value="Assigned">Assigned</option><option value="Ongoing">Ongoing</option><option value="Monitoring">Monitoring</option><option value="Resolved">Resolved</option><option value="Archived">Archived</option></select><select id="filterPriority" onchange="renderCases()"><option value="">All Priority</option><option value="HIGH">HIGH</option><option value="MEDIUM">MEDIUM</option><option value="LOW">LOW</option></select></div><button class="btn btn-accent btn-sm" onclick="window.open('/report','_blank')"><i class="fas fa-plus"></i>New Case </button></div><div class="table-wrap"><table><thead><tr><th>Case ID</th><th>Victim</th><th>Incident</th><th>Priority</th><th>Status</th><th>Assigned To</th><th>Date</th></tr></thead><tbody id="casesTableBody"></tbody></table></div></div>< !--======CASE DETAIL======--><div class="page-section" id="viewCaseDetail"><button class="btn btn-outline btn-sm" onclick="switchView('cases')" style="margin-bottom:12px"><i class="fas fa-arrow-left"></i>Back to Cases </button><div id="caseDetailContent"></div></div>< !--======REPORTS VIEW======--><div class="page-section" id="viewReports"><div class="stats-grid" id="reportStatsGrid"></div><div class="reports-grid"><div class="chart-placeholder"><h4><i class="fas fa-chart-bar" style="color:var(--accent)"></i>Priority Distribution</h4><div id="priorityChart" class="bar-chart" style="height:140px;align-items:flex-end"></div></div><div class="chart-placeholder"><h4><i class="fas fa-check-circle" style="color:var(--success)"></i>Status Distribution</h4><div id="statusChart" class="bar-chart" style="height:140px;align-items:flex-end"></div></div></div><div class="chart-placeholder"><h4><i class="fas fa-users" style="color:var(--primary)"></i>Officer Workload</h4><div class="table-wrap"><table><thead><tr><th>Officer</th><th>Assigned</th><th>Active</th><th>Resolved</th></tr></thead><tbody id="workloadBody"></tbody></table></div></div></div>< !--======USERS VIEW======--><div class="page-section" id="viewUsers"><div class="toolbar"><h3 style="font-size:18px"><i class="fas fa-users" style="color:var(--primary)"></i>Registered Officers</h3></div><div class="table-wrap"><table><thead><tr id="usersTableHeader"><th>Name</th><th>Username</th><th>Email</th><th>Role</th><th>Barangay</th><th>Contact</th><th>Status</th><th>Registered</th><th id="usersActionsHeader" style="display:none">Actions</th></tr></thead><tbody id="usersTableBody"></tbody></table></div></div></div></main></div>< !--============VAWC ASSISTANT============--><div class="dash-assistant-fab" id="dashAssistantFab" onclick="toggleVAWCAssistant()" title="VAWC Assistant"><i class="fas fa-comment-dots"></i><span class="dash-fab-label">VAWC Assistant</span></div><div class="dash-assistant-popup" id="dashAssistantPopup"><div class="dash-popup-header"><div class="dash-popup-title"><i class="fas fa-shield-halved"></i>VAWC Awareness </div><div class="dash-lang-toggle"><span class="dash-lang-opt active" data-lang="en" onclick="toggleLanguage('en')">EN</span><span class="dash-lang-div">|</span><span class="dash-lang-opt" data-lang="tl" onclick="toggleLanguage('tl')">TL</span></div><button class="dash-popup-close" onclick="toggleVAWCAssistant()">&times;
     </button></div><div class="dash-popup-body"><div class="dash-faq-panel"><div class="dash-faq-header">VAWC Awareness</div><div class="dash-faq-list" id="dashFaqList"></div></div><div class="dash-chat-panel"><div class="dash-chat-header"><i class="fas fa-robot"></i>Ask VAWC Assistant </div><div class="dash-chat-msgs" id="dashChatMessages"><div class="dash-msg dash-msg-bot"><span class="dash-msg-text">Hello ! I am your VAWC Assistant. Ask me anything about VAWC,
     your rights,
     or where to get help. / Ako ang iyong VAWC Assistant. Magtanong tungkol sa VAWC,
     iyong mga karapatan,
-    o saan makakuha ng tulong.</span></div></div><div class="dash-chat-input-row"><input type="text" id="dashChatInput" placeholder="Type a message..." onkeydown="if(event.key==='Enter') sendVAWCMessage()"><button class="dash-chat-send" onclick="sendVAWCMessage()"><i class="fas fa-paper-plane"></i></button></div></div></div></div><!--============NOTIFICATION PANEL============--><div class="modal-overlay" id="notifModal"><div class="modal"><h3><i class="fas fa-bell" style="color:var(--accent)"></i>Notifications</h3><div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap"><button class="btn btn-sm btn-outline" onclick="refreshNotifications()" title="Refresh"><i class="fas fa-sync"></i></button><button class="btn btn-sm btn-outline" onclick="markAllNotifRead()"><i class="fas fa-check-double"></i>Mark all read</button><button class="btn btn-sm btn-outline" id="notifHistoryBtn" onclick="toggleNotifHistory()"><i class="fas fa-history"></i>History</button></div><div id="notifList"></div><div class="modal-actions"><button class="btn btn-outline btn-sm" onclick="closeModal('notifModal')">Close</button></div></div></div><!--============ACTION MODAL============--><div class="modal-overlay" id="actionModal"><div class="modal"><h3 id="actionModalTitle">Action</h3><div id="actionModalBody"></div><div class="modal-actions"><button class="btn btn-outline btn-sm" onclick="closeModal('actionModal')">Cancel</button><button class="btn btn-primary btn-sm" id="actionModalConfirm" onclick="confirmAction()">Confirm</button></div></div></div><!--============DASHBOARD DETAIL MODAL============--><div class="modal-overlay" id="dashboardModal"><div class="modal" style="max-width:900px"><h3 id="dashboardModalTitle"><i class="fas fa-folder"></i>All Cases</h3><div id="dashboardModalBody" style="overflow-x:auto"></div><div class="modal-actions"><button class="btn btn-outline btn-sm" onclick="closeModal('dashboardModal')">Close</button></div></div></div><script> // ============ STATE ============
+    o saan makakuha ng tulong.</span></div></div><div class="dash-chat-input-row"><input type="text" id="dashChatInput" placeholder="Type a message..." onkeydown="if(event.key==='Enter') sendVAWCMessage()"><button class="dash-chat-send" onclick="sendVAWCMessage()"><i class="fas fa-paper-plane"></i></button></div></div></div></div>< !--============NOTIFICATION PANEL============--><div class="modal-overlay" id="notifModal"><div class="modal"><h3><i class="fas fa-bell" style="color:var(--accent)"></i>Notifications</h3><div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap"><button class="btn btn-sm btn-outline" onclick="refreshNotifications()" title="Refresh"><i class="fas fa-sync"></i></button><button class="btn btn-sm btn-outline" onclick="markAllNotifRead()"><i class="fas fa-check-double"></i>Mark all read</button><button class="btn btn-sm btn-outline" id="notifHistoryBtn" onclick="toggleNotifHistory()"><i class="fas fa-history"></i>History</button></div><div id="notifList"></div><div class="modal-actions"><button class="btn btn-outline btn-sm" onclick="closeModal('notifModal')">Close</button></div></div></div>< !--============ACTION MODAL============--><div class="modal-overlay" id="actionModal"><div class="modal"><h3 id="actionModalTitle">Action</h3><div id="actionModalBody"></div><div class="modal-actions"><button class="btn btn-outline btn-sm" onclick="closeModal('actionModal')">Cancel</button><button class="btn btn-primary btn-sm" id="actionModalConfirm" onclick="confirmAction()">Confirm</button></div></div></div>< !--============DASHBOARD DETAIL MODAL============--><div class="modal-overlay" id="dashboardModal"><div class="modal" style="max-width:900px"><h3 id="dashboardModalTitle"><i class="fas fa-folder"></i>All Cases</h3><div id="dashboardModalBody" style="overflow-x:auto"></div><div class="modal-actions"><button class="btn btn-outline btn-sm" onclick="closeModal('dashboardModal')">Close</button></div></div></div><script> // ============ STATE ============
     let TOKEN=localStorage.getItem('vawc_token') || '';
     let CURRENT_USER=null;
     let CASES=[];
@@ -1287,7 +1286,11 @@
       options.headers= {
 
         ...options.headers,
-        'Authorization':`Bearer ${TOKEN}`,
+        'Authorization':`Bearer $ {
+          TOKEN
+        }
+
+        `,
         'Accept':'application/json'
       }
 
@@ -1476,17 +1479,29 @@
     function renderDashboard(stats, monthly, activity) {
       const grid=document.getElementById('statsGrid');
 
-      grid.innerHTML=` <div class="stat-card clickable" onclick="openDashboardModal('total')"><div class="stat-icon blue"><i class="fas fa-folder"></i></div><div class="stat-info"><h4>${stats.total_cases}
+      grid.innerHTML=` <div class="stat-card clickable" onclick="openDashboardModal('total')"><div class="stat-icon blue"><i class="fas fa-folder"></i></div><div class="stat-info"><h4>$ {
+        stats.total_cases
+      }
 
-      </h4><p>Total Cases</p></div></div><div class="stat-card clickable" onclick="openDashboardModal('active')"><div class="stat-icon orange"><i class="fas fa-spinner"></i></div><div class="stat-info"><h4>${stats.active_cases}
+      </h4><p>Total Cases</p></div></div><div class="stat-card clickable" onclick="openDashboardModal('active')"><div class="stat-icon orange"><i class="fas fa-spinner"></i></div><div class="stat-info"><h4>$ {
+        stats.active_cases
+      }
 
-      </h4><p>Active Cases</p></div></div><div class="stat-card clickable" onclick="openDashboardModal('urgent')"><div class="stat-icon red"><i class="fas fa-exclamation-triangle"></i></div><div class="stat-info"><h4>${stats.urgent_cases}
+      </h4><p>Active Cases</p></div></div><div class="stat-card clickable" onclick="openDashboardModal('urgent')"><div class="stat-icon red"><i class="fas fa-exclamation-triangle"></i></div><div class="stat-info"><h4>$ {
+        stats.urgent_cases
+      }
 
-      </h4><p>Urgent (HIGH)</p></div></div><div class="stat-card clickable" onclick="openDashboardModal('resolved')"><div class="stat-icon green"><i class="fas fa-check-circle"></i></div><div class="stat-info"><h4>${stats.resolved_cases}
+      </h4><p>Urgent (HIGH)</p></div></div><div class="stat-card clickable" onclick="openDashboardModal('resolved')"><div class="stat-icon green"><i class="fas fa-check-circle"></i></div><div class="stat-info"><h4>$ {
+        stats.resolved_cases
+      }
 
-      </h4><p>Resolved</p></div></div><div class="stat-card clickable" onclick="openDashboardModal('pending')"><div class="stat-icon purple"><i class="fas fa-clock"></i></div><div class="stat-info"><h4>${stats.pending_cases}
+      </h4><p>Resolved</p></div></div><div class="stat-card clickable" onclick="openDashboardModal('pending')"><div class="stat-icon purple"><i class="fas fa-clock"></i></div><div class="stat-info"><h4>$ {
+        stats.pending_cases
+      }
 
-      </h4><p>Pending</p></div></div><div class="stat-card clickable" onclick="openDashboardModal('officers')"><div class="stat-icon teal"><i class="fas fa-users"></i></div><div class="stat-info"><h4>${stats.total_officers}
+      </h4><p>Pending</p></div></div><div class="stat-card clickable" onclick="openDashboardModal('officers')"><div class="stat-icon teal"><i class="fas fa-users"></i></div><div class="stat-info"><h4>$ {
+        stats.total_officers
+      }
 
       </h4><p>Officers</p></div></div>`;
 
@@ -1503,11 +1518,21 @@
         'orange',
         'red'];
 
-        feed.innerHTML=activity.map((a, i)=>` <div class="activity-item" > <div class="activity-dot ${colors[i%4]}" ></div> <div class="activity-content" > <p>${a.action}
+        feed.innerHTML=activity.map((a, i)=>` <div class="activity-item" > <div class="activity-dot ${colors[i%4]}" ></div> <div class="activity-content" > <p>$ {
+            a.action
+          }
 
-          ${a.performed_by_name?` by <strong>${ a.performed_by_name } </strong>`:''}
+          $ {
+            a.performed_by_name?` by <strong>$ {
+              a.performed_by_name
+            }
 
-          </p> <small>${a.created_at?new Date(a.created_at).toLocaleString():''}
+            </strong>`:''
+          }
+
+          </p> <small>$ {
+            a.created_at?new Date(a.created_at).toLocaleString():''
+          }
 
           </small> </div> </div>`).join('');
       }
@@ -1834,19 +1859,33 @@
           const badgeClass=c.priority==='HIGH' ?'badge-red':c.priority==='MEDIUM' ?'badge-orange':'badge-green';
           const statusClass=c.status==='Resolved' ||c.status==='Archived' ?'badge-green': c.status==='Submitted' ?'badge-blue':c.status==='Assigned' ?'badge-orange':'badge-gray';
 
-          return `<tr class="clickable" onclick="showCaseDetail(${c.id})" > <td><strong>${c.case_id||'N/A'}
+          return `<tr class="clickable" onclick="showCaseDetail(${c.id})" > <td><strong>$ {
+            c.case_id||'N/A'
+          }
 
-          </strong></td> <td>${c.victim_name}
+          </strong></td> <td>$ {
+            c.victim_name
+          }
 
-          </td> <td>${c.incident_type}
+          </td> <td>$ {
+            c.incident_type
+          }
 
-          </td> <td><span class="priority-indicator" ><span class="priority-dot ${c.priority.toLowerCase()}" ></span> ${c.priority}
+          </td> <td><span class="priority-indicator" ><span class="priority-dot ${c.priority.toLowerCase()}" ></span> $ {
+            c.priority
+          }
 
-          </span></td> <td><span class="badge ${statusClass}" >${c.status}
+          </span></td> <td><span class="badge ${statusClass}" >$ {
+            c.status
+          }
 
-          </span></td> <td>${c.assigned_to_name||'<span style="color:var(--text-light)">Unassigned</span>'}
+          </span></td> <td>$ {
+            c.assigned_to_name||'<span style="color:var(--text-light)">Unassigned</span>'
+          }
 
-          </td> <td>${c.date_reported?new Date(c.date_reported).toLocaleDateString():''}
+          </td> <td>$ {
+            c.date_reported?new Date(c.date_reported).toLocaleDateString():''
+          }
 
           </td> </tr>`;
         }).join('');
@@ -1857,13 +1896,15 @@
       SELECTED_CASE_ID=caseId;
       switchView('caseDetail');
       document.getElementById('pageTitle').textContent='Case Detail';
-      window.scrollTo({top:0,behavior:'smooth'});
-      document.getElementById('caseDetailContent').innerHTML='<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading case details...</p></div>';
 
       try {
         console.log('[showCaseDetail] caseId:', caseId);
 
-        const r=await fetchWithAuth(`/api/cases/${caseId}`);
+        const r=await fetchWithAuth(`/api/cases/$ {
+            caseId
+          }
+
+          `);
         console.log('[showCaseDetail] response status:', r.status);
         const d=await r.json();
         console.log('[showCaseDetail] response body:', d);
@@ -1878,37 +1919,113 @@
         const badgeClass=c.priority==='HIGH' ?'badge-red':c.priority==='MEDIUM' ?'badge-orange':'badge-green';
         const statusClass=c.status==='Resolved' ||c.status==='Archived' ?'badge-green': c.status==='Submitted' ?'badge-blue':c.status==='Assigned' ?'badge-orange':'badge-gray';
 
-        document.getElementById('caseDetailContent').innerHTML=` <div class="case-detail-header"><div><h2>${c.case_id||'N/A'}
+        document.getElementById('caseDetailContent').innerHTML=` <div class="case-detail-header"><div><h2>$ {
+          c.case_id||'N/A'
+        }
 
-        <span class="badge ${badgeClass}" style="margin-left:8px;vertical-align:middle">${c.priority}
+        <span class="badge ${badgeClass}" style="margin-left:8px;vertical-align:middle">$ {
+          c.priority
+        }
 
-        </span></h2><div class="case-meta"><span class="badge ${statusClass}">${c.status}
+        </span></h2><div class="case-meta"><span class="badge ${statusClass}">$ {
+          c.status
+        }
 
-        </span><span style="font-size:13px;color:var(--text-light)">Reported: ${c.date_reported?new Date(c.date_reported).toLocaleString(): 'N/A'}
+        </span><span style="font-size:13px;color:var(--text-light)">Reported: $ {
+          c.date_reported?new Date(c.date_reported).toLocaleString(): 'N/A'
+        }
 
-        </span><span style="font-size:13px;color:var(--text-light)">Assigned: ${c.assigned_to_name||'Not assigned'}
+        </span><span style="font-size:13px;color:var(--text-light)">Assigned: $ {
+          c.assigned_to_name||'Not assigned'
+        }
 
-        </span></div></div></div><div class="case-detail-grid"><div><div class="detail-card"><h3><i class="fas fa-info-circle" style="color:var(--accent)"></i>Victim Information</h3><div class="detail-row"><div class="detail-label">Name</div><div class="detail-value">${c.victim_name}
+        </span></div></div></div><div class="case-detail-grid"><div><div class="detail-card"><h3><i class="fas fa-info-circle" style="color:var(--accent)"></i>Victim Information</h3><div class="detail-row"><div class="detail-label">Name</div><div class="detail-value">$ {
+          c.victim_name
+        }
 
-        </div></div><div class="detail-row"><div class="detail-label">Contact</div><div class="detail-value">${c.contact_number||'N/A'}
+        </div></div><div class="detail-row"><div class="detail-label">Contact</div><div class="detail-value">$ {
+          c.contact_number||'N/A'
+        }
 
-        </div></div><div class="detail-row"><div class="detail-label">Location</div><div class="detail-value">${c.location||'N/A'}
+        </div></div><div class="detail-row"><div class="detail-label">Location</div><div class="detail-value">$ {
+          c.location||'N/A'
+        }
 
-        </div></div><div class="detail-row"><div class="detail-label">Incident Type</div><div class="detail-value">${c.incident_type}
+        </div></div><div class="detail-row"><div class="detail-label">Incident Type</div><div class="detail-value">$ {
+          c.incident_type
+        }
 
-        </div></div><div class="detail-row"><div class="detail-label">Description</div><div class="detail-value">${c.description}
+        </div></div><div class="detail-row"><div class="detail-label">Description</div><div class="detail-value">$ {
+          c.description
+        }
 
-        </div></div>${c.file_path?`<div class="detail-row"><div class="detail-label">Evidence</div><div class="detail-value"><a href="/${c.file_path}" target="_blank" style="color:var(--accent)"><i class="fas fa-paperclip"></i>View file</a></div></div>`: ''}
+        </div></div>$ {
+          c.file_path?`<div class="detail-row"><div class="detail-label">Evidence</div><div class="detail-value"><a href="/${c.file_path}" target="_blank" style="color:var(--accent)"><i class="fas fa-paperclip"></i>View file</a></div></div>`: ''
+        }
 
-        </div>${c.case_notes?`<div class="detail-card"><h3><i class="fas fa-sticky-note" style="color:var(--warning)"></i>Case Notes</h3><pre style="white-space:pre-wrap;font-family:inherit;font-size:14px;line-height:1.6">${ c.case_notes } </pre></div>`:''}
+        </div>$ {
+          c.case_notes?`<div class="detail-card"><h3><i class="fas fa-sticky-note" style="color:var(--warning)"></i>Case Notes</h3><pre style="white-space:pre-wrap;font-family:inherit;font-size:14px;line-height:1.6">$ {
+            c.case_notes
+          }
 
-        ${c.resolution_notes?`<div class="detail-card"><h3><i class="fas fa-check" style="color:var(--success)"></i>Resolution Notes</h3><p style="font-size:14px">${ c.resolution_notes } </p></div>`:''}
+          </pre></div>`:''
+        }
 
-        <div class="detail-card"><h3><i class="fas fa-history" style="color:var(--primary)"></i>Activity Timeline</h3><div class="timeline" id="timeline">${d.activities.length===0?'<div style="color:var(--text-light);padding:12px">No activity recorded</div>': d.activities.map(a=>`<div class="timeline-item" ><div class="time" >${ a.created_at?new Date(a.created_at).toLocaleString():'' } </div><p>${ a.action } ${ a.notes?': ' +a.notes:'' } </p></div>`).join('')}
+        $ {
+          c.resolution_notes?`<div class="detail-card"><h3><i class="fas fa-check" style="color:var(--success)"></i>Resolution Notes</h3><p style="font-size:14px">$ {
+            c.resolution_notes
+          }
 
-        </div></div><div class="detail-card"><h3><i class="fas fa-share-alt" style="color:var(--warning)"></i>Referrals</h3>${d.referrals.length===0?'<div style="color:var(--text-light);padding:12px">No referrals made</div>': `<div class="table-wrap"><table><thead><tr><th>Referred To</th><th>Reason</th><th>Status</th><th>Date</th></tr></thead><tbody>${ d.referrals.map(r=>`<tr><td>${ r.referred_to } </td><td>${ r.reason } </td><td><span class="badge badge-blue" >${ r.status } </span></td><td>${ r.created_at?new Date(r.created_at).toLocaleDateString():'' } </td></tr>`).join('') } </tbody></table></div>`}
+          </p></div>`:''
+        }
 
-        </div></div><div><div class="detail-card"><h3><i class="fas fa-tools" style="color:var(--accent)"></i>Actions</h3><div class="action-btns">${c.status !=='Resolved' &&c.status !=='Archived' ?` <button class="btn btn-accent btn-sm" onclick="openAssignModal(${c.id})"><i class="fas fa-user-check"></i>Assign</button><button class="btn btn-primary btn-sm" onclick="openNoteModal(${c.id})"><i class="fas fa-plus"></i>Add Note</button><button class="btn btn-success btn-sm" onclick="openResolveModal(${c.id})"><i class="fas fa-check"></i>Resolve</button><button class="btn btn-outline btn-sm" onclick="openReferModal(${c.id})"><i class="fas fa-share"></i>Refer</button><button class="btn btn-danger btn-sm" onclick="openArchiveModal(${c.id})"><i class="fas fa-archive"></i>Archive</button>`: `<div style="color:var(--text-light);font-size:14px;padding:8px 0" >Case is ${ c.status.toLowerCase() } — no further actions available</div>`}
+        <div class="detail-card"><h3><i class="fas fa-history" style="color:var(--primary)"></i>Activity Timeline</h3><div class="timeline" id="timeline">$ {
+          d.activities.length===0?'<div style="color:var(--text-light);padding:12px">No activity recorded</div>': d.activities.map(a=>`<div class="timeline-item" ><div class="time" >$ {
+              a.created_at?new Date(a.created_at).toLocaleString():''
+            }
+
+            </div><p>$ {
+              a.action
+            }
+
+            $ {
+              a.notes?': ' +a.notes:''
+            }
+
+            </p></div>`).join('')
+        }
+
+        </div></div><div class="detail-card"><h3><i class="fas fa-share-alt" style="color:var(--warning)"></i>Referrals</h3>$ {
+          d.referrals.length===0?'<div style="color:var(--text-light);padding:12px">No referrals made</div>': `<div class="table-wrap"><table><thead><tr><th>Referred To</th><th>Reason</th><th>Status</th><th>Date</th></tr></thead><tbody>$ {
+            d.referrals.map(r=>`<tr><td>$ {
+                r.referred_to
+              }
+
+              </td><td>$ {
+                r.reason
+              }
+
+              </td><td><span class="badge badge-blue" >$ {
+                r.status
+              }
+
+              </span></td><td>$ {
+                r.created_at?new Date(r.created_at).toLocaleDateString():''
+              }
+
+              </td></tr>`).join('')
+          }
+
+          </tbody></table></div>`
+        }
+
+        </div></div><div><div class="detail-card"><h3><i class="fas fa-tools" style="color:var(--accent)"></i>Actions</h3><div class="action-btns">$ {
+          c.status !=='Resolved' &&c.status !=='Archived' ?` <button class="btn btn-accent btn-sm" onclick="openAssignModal(${c.id})"><i class="fas fa-user-check"></i>Assign</button><button class="btn btn-primary btn-sm" onclick="openNoteModal(${c.id})"><i class="fas fa-plus"></i>Add Note</button><button class="btn btn-success btn-sm" onclick="openResolveModal(${c.id})"><i class="fas fa-check"></i>Resolve</button><button class="btn btn-outline btn-sm" onclick="openReferModal(${c.id})"><i class="fas fa-share"></i>Refer</button><button class="btn btn-danger btn-sm" onclick="openArchiveModal(${c.id})"><i class="fas fa-archive"></i>Archive</button>`: `<div style="color:var(--text-light);font-size:14px;padding:8px 0" >Case is $ {
+            c.status.toLowerCase()
+          }
+
+          — no further actions available</div>`
+        }
 
         </div></div><div class="detail-card"><h3><i class="fas fa-flag" style="color:var(--text-light)"></i>Status Guide</h3><div style="font-size:13px;line-height:2"><span class="badge badge-blue">Submitted</span>→ <span class="badge badge-orange">Assigned</span>→ <span class="badge badge-gray">Ongoing</span>→ <span class="badge badge-gray">Monitoring</span>→ <span class="badge badge-green">Resolved</span>→ <span class="badge badge-gray">Archived</span></div></div></div></div>`;
       }
@@ -1927,12 +2044,18 @@
 
       ;
 
-      const options=USERS.filter(u=>u.is_active).map(u=>`<option value="${u.id}" >${u.full_name}
+      const options=USERS.filter(u=>u.is_active).map(u=>`<option value="${u.id}" >$ {
+          u.full_name
+        }
 
-        (${u.role})</option>`).join('');
+        ($ {
+            u.role
+          })</option>`).join('');
       document.getElementById('actionModalTitle').textContent='Assign Case';
 
-      document.getElementById('actionModalBody').innerHTML=` <div class="form-group"><label>Select Officer</label><select id="assignOfficer">${options}
+      document.getElementById('actionModalBody').innerHTML=` <div class="form-group"><label>Select Officer</label><select id="assignOfficer">$ {
+        options
+      }
 
       </select></div>`;
       openModal('actionModal');
@@ -1998,7 +2121,11 @@
           const fd=new FormData();
           fd.append('officer_id', officerId);
 
-          await fetchWithAuth(`/api/cases/${caseId}/assign`, {
+          await fetchWithAuth(`/api/cases/$ {
+              caseId
+            }
+
+            /assign`, {
             method:'POST', body:fd
           });
       }
@@ -2009,7 +2136,11 @@
         const fd=new FormData();
         fd.append('notes', notes);
 
-        await fetchWithAuth(`/api/cases/${caseId}/note`, {
+        await fetchWithAuth(`/api/cases/$ {
+            caseId
+          }
+
+          /note`, {
           method:'POST', body:fd
         });
     }
@@ -2020,7 +2151,11 @@
       const fd=new FormData();
       fd.append('resolution_notes', notes);
 
-      await fetchWithAuth(`/api/cases/${caseId}/resolve`, {
+      await fetchWithAuth(`/api/cases/$ {
+          caseId
+        }
+
+        /resolve`, {
         method:'POST', body:fd
       });
     }
@@ -2030,7 +2165,11 @@
       const reason=document.getElementById('referReason').value;
       if( !reason) return alert('Please enter a reason');
 
-      await fetchWithAuth(`/api/cases/${caseId}/refer`, {
+      await fetchWithAuth(`/api/cases/$ {
+          caseId
+        }
+
+        /refer`, {
         method:'POST', body:JSON.stringify({
           referred_to:refTo, reason:reason
         })
@@ -2038,7 +2177,11 @@
     }
 
     else if(type==='archive') {
-      await fetchWithAuth(`/api/cases/${caseId}/archive`, {
+      await fetchWithAuth(`/api/cases/$ {
+          caseId
+        }
+
+        /archive`, {
         method:'POST'
       });
     }
@@ -2060,13 +2203,21 @@
       const active=CASES.filter(c=>['Submitted', 'Assigned', 'Ongoing', 'Monitoring'].includes(c.status)).length;
       const resolved=CASES.filter(c=>['Resolved', 'Archived'].includes(c.status)).length;
 
-      document.getElementById('reportStatsGrid').innerHTML=` <div class="stat-card"><div class="stat-icon blue"><i class="fas fa-folder"></i></div><div class="stat-info"><h4>${total}
+      document.getElementById('reportStatsGrid').innerHTML=` <div class="stat-card"><div class="stat-icon blue"><i class="fas fa-folder"></i></div><div class="stat-info"><h4>$ {
+        total
+      }
 
-      </h4><p>Total Cases</p></div></div><div class="stat-card"><div class="stat-icon orange"><i class="fas fa-spinner"></i></div><div class="stat-info"><h4>${active}
+      </h4><p>Total Cases</p></div></div><div class="stat-card"><div class="stat-icon orange"><i class="fas fa-spinner"></i></div><div class="stat-info"><h4>$ {
+        active
+      }
 
-      </h4><p>Active</p></div></div><div class="stat-card"><div class="stat-icon red"><i class="fas fa-exclamation-triangle"></i></div><div class="stat-info"><h4>${urgent}
+      </h4><p>Active</p></div></div><div class="stat-card"><div class="stat-icon red"><i class="fas fa-exclamation-triangle"></i></div><div class="stat-info"><h4>$ {
+        urgent
+      }
 
-      </h4><p>Urgent</p></div></div><div class="stat-card"><div class="stat-icon green"><i class="fas fa-check-circle"></i></div><div class="stat-info"><h4>${resolved}
+      </h4><p>Urgent</p></div></div><div class="stat-card"><div class="stat-icon green"><i class="fas fa-check-circle"></i></div><div class="stat-info"><h4>$ {
+        resolved
+      }
 
       </h4><p>Resolved</p></div></div>`;
 
@@ -2078,9 +2229,13 @@
 
       ;
 
-      document.getElementById('priorityChart').innerHTML=priority.map(p=> `<div style="flex:1;display:flex;flex-direction:column;align-items:center;height:100%;justify-content:flex-end" > <div class="bar" style="height:${(p.count/pMax)*120}px;background:${pColors[p.priority]||'var(--accent)'};width:70%" ></div> <div class="bar-label" >${p.priority}
+      document.getElementById('priorityChart').innerHTML=priority.map(p=> `<div style="flex:1;display:flex;flex-direction:column;align-items:center;height:100%;justify-content:flex-end" > <div class="bar" style="height:${(p.count/pMax)*120}px;background:${pColors[p.priority]||'var(--accent)'};width:70%" ></div> <div class="bar-label" >$ {
+          p.priority
+        }
 
-        <br><strong>${p.count}
+        <br><strong>$ {
+          p.count
+        }
 
         </strong></div> </div>`).join('')||'<div style="color:var(--text-light);padding:40px;text-align:center;width:100%">No data</div>';
 
@@ -2092,19 +2247,31 @@
 
       ;
 
-      document.getElementById('statusChart').innerHTML=status.map(s=> `<div style="flex:1;display:flex;flex-direction:column;align-items:center;height:100%;justify-content:flex-end" > <div class="bar" style="height:${(s.count/sMax)*120}px;background:${sColors[s.status]||'var(--accent)'};width:70%" ></div> <div class="bar-label" >${s.status}
+      document.getElementById('statusChart').innerHTML=status.map(s=> `<div style="flex:1;display:flex;flex-direction:column;align-items:center;height:100%;justify-content:flex-end" > <div class="bar" style="height:${(s.count/sMax)*120}px;background:${sColors[s.status]||'var(--accent)'};width:70%" ></div> <div class="bar-label" >$ {
+          s.status
+        }
 
-        <br><strong>${s.count}
+        <br><strong>$ {
+          s.count
+        }
 
         </strong></div> </div>`).join('')||'<div style="color:var(--text-light);padding:40px;text-align:center;width:100%">No data</div>';
 
-      document.getElementById('workloadBody').innerHTML=workload.length===0? '<tr><td colspan="4" style="text-align:center;color:var(--text-light)">No officers registered</td></tr>': workload.map(w=>`<tr><td><strong>${w.officer_name}
+      document.getElementById('workloadBody').innerHTML=workload.length===0? '<tr><td colspan="4" style="text-align:center;color:var(--text-light)">No officers registered</td></tr>': workload.map(w=>`<tr><td><strong>$ {
+          w.officer_name
+        }
 
-        </strong></td><td>${w.assigned_count}
+        </strong></td><td>$ {
+          w.assigned_count
+        }
 
-        </td><td>${w.active_count}
+        </td><td>$ {
+          w.active_count
+        }
 
-        </td><td>${w.resolved_count}
+        </td><td>$ {
+          w.resolved_count
+        }
 
         </td></tr>`).join('');
     }
@@ -2138,23 +2305,45 @@
             actions+=`<button class="btn btn-sm btn-danger" onclick="handleDeleteOfficer(${u.id})" title="Delete" ><i class="fas fa-trash" ></i></button>`;
           }
 
-          return `<tr> <td><strong>${u.full_name}
+          return `<tr> <td><strong>$ {
+            u.full_name
+          }
 
-          </strong></td> <td>${u.username}
+          </strong></td> <td>$ {
+            u.username
+          }
 
-          </td> <td>${u.email}
+          </td> <td>$ {
+            u.email
+          }
 
-          </td> <td><span class="badge ${u.role==='admin'?'badge-red':'badge-blue'}" >${u.role}
+          </td> <td><span class="badge ${u.role==='admin'?'badge-red':'badge-blue'}" >$ {
+            u.role
+          }
 
-          </span></td> <td>${u.barangay||'N/A'}
+          </span></td> <td>$ {
+            u.barangay||'N/A'
+          }
 
-          </td> <td>${u.contact_number||'N/A'}
+          </td> <td>$ {
+            u.contact_number||'N/A'
+          }
 
-          </td> <td><span class="badge ${statusColor}" >${s}
+          </td> <td><span class="badge ${statusColor}" >$ {
+            s
+          }
 
-          </span></td> <td>${u.created_at?new Date(u.created_at).toLocaleDateString():'N/A'}
+          </span></td> <td>$ {
+            u.created_at?new Date(u.created_at).toLocaleDateString():'N/A'
+          }
 
-          </td> ${isAdmin?`<td>${ actions } </td>`:''}
+          </td> $ {
+            isAdmin?`<td>$ {
+              actions
+            }
+
+            </td>`:''
+          }
 
           </tr>`;
         }).join('');
@@ -2164,7 +2353,11 @@
       if( !confirm('Approve this officer?')) return;
 
       try {
-        await fetchWithAuth(`/api/users/${userId}/approve`, {
+        await fetchWithAuth(`/api/users/$ {
+            userId
+          }
+
+          /approve`, {
           method:'POST'
         });
       await loadAllData();
@@ -2179,7 +2372,11 @@
       if( !confirm('Reject this officer?')) return;
 
       try {
-        await fetchWithAuth(`/api/users/${userId}/reject`, {
+        await fetchWithAuth(`/api/users/$ {
+            userId
+          }
+
+          /reject`, {
           method:'POST'
         });
       await loadAllData();
@@ -2194,7 +2391,11 @@
       if( !confirm('Archive this officer? They will not be able to login.')) return;
 
       try {
-        await fetchWithAuth(`/api/users/${userId}/archive`, {
+        await fetchWithAuth(`/api/users/$ {
+            userId
+          }
+
+          /archive`, {
           method:'POST'
         });
       await loadAllData();
@@ -2209,7 +2410,11 @@
       if( !confirm('Permanently delete this officer? This cannot be undone.')) return;
 
       try {
-        await fetchWithAuth(`/api/users/${userId}/delete`, {
+        await fetchWithAuth(`/api/users/$ {
+            userId
+          }
+
+          /delete`, {
           method:'DELETE'
         });
       await loadAllData();
@@ -2232,25 +2437,43 @@
         return;
       }
 
-      list.innerHTML=NOTIFICATIONS.map(n=>`<div style="padding:12px 0;border-bottom:1px solid #f0f2f5;${n.is_read&&!NOTIF_HISTORY_MODE?'':'background:#f0f7ff;margin:0 -12px;padding:12px'}" > <div style="display:flex;justify-content:space-between;align-items:flex-start" > <p style="font-size:14px;flex:1" >${n.message}
+      list.innerHTML=NOTIFICATIONS.map(n=>`<div style="padding:12px 0;border-bottom:1px solid #f0f2f5;${n.is_read&&!NOTIF_HISTORY_MODE?'':'background:#f0f7ff;margin:0 -12px;padding:12px'}" > <div style="display:flex;justify-content:space-between;align-items:flex-start" > <p style="font-size:14px;flex:1" >$ {
+          n.message
+        }
 
-        </p> ${n.is_archived?'<span style="font-size:11px;color:var(--text-light);white-space:nowrap;margin-left:8px"><i class="fas fa-archive"></i></span>':''}
+        </p> $ {
+          n.is_archived?'<span style="font-size:11px;color:var(--text-light);white-space:nowrap;margin-left:8px"><i class="fas fa-archive"></i></span>':''
+        }
 
-        ${n.is_deleted?'<span style="font-size:11px;color:var(--text-light);white-space:nowrap;margin-left:8px"><i class="fas fa-trash"></i></span>':''}
+        $ {
+          n.is_deleted?'<span style="font-size:11px;color:var(--text-light);white-space:nowrap;margin-left:8px"><i class="fas fa-trash"></i></span>':''
+        }
 
-        </div> <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px" > <small style="color:var(--text-light)" >${n.created_at?new Date(n.created_at).toLocaleString():''}
+        </div> <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px" > <small style="color:var(--text-light)" >$ {
+          n.created_at?new Date(n.created_at).toLocaleString():''
+        }
 
-        </small> <div style="display:flex;gap:4px" > ${!n.is_read?`<button class="btn btn-sm btn-outline" onclick="markNotifRead(${n.id})" title="Mark as read" ><i class="fas fa-check" ></i></button>`:''}
+        </small> <div style="display:flex;gap:4px" > $ {
+          !n.is_read?`<button class="btn btn-sm btn-outline" onclick="markNotifRead(${n.id})" title="Mark as read" ><i class="fas fa-check" ></i></button>`:''
+        }
 
-        ${!n.is_archived&& !n.is_deleted?`<button class="btn btn-sm btn-outline" onclick="archiveNotif(${n.id})" title="Archive" ><i class="fas fa-archive" ></i></button>`:''}
+        $ {
+          !n.is_archived&& !n.is_deleted?`<button class="btn btn-sm btn-outline" onclick="archiveNotif(${n.id})" title="Archive" ><i class="fas fa-archive" ></i></button>`:''
+        }
 
-        ${!n.is_deleted?`<button class="btn btn-sm btn-outline" onclick="deleteNotif(${n.id})" title="Delete" style="color:var(--danger)" ><i class="fas fa-trash" ></i></button>`:''}
+        $ {
+          !n.is_deleted?`<button class="btn btn-sm btn-outline" onclick="deleteNotif(${n.id})" title="Delete" style="color:var(--danger)" ><i class="fas fa-trash" ></i></button>`:''
+        }
 
         </div> </div> </div>`).join('');
     }
 
     async function markNotifRead(id) {
-      await fetchWithAuth(`/api/notifications/${id}/read`, {
+      await fetchWithAuth(`/api/notifications/$ {
+          id
+        }
+
+        /read`, {
         method:'PUT'
       });
     const r=await fetchWithAuth('/api/notifications');
@@ -2270,7 +2493,11 @@
     }
 
     async function archiveNotif(id) {
-      await fetchWithAuth(`/api/notifications/${id}/archive`, {
+      await fetchWithAuth(`/api/notifications/$ {
+          id
+        }
+
+        /archive`, {
         method:'PUT'
       });
     const r=await fetchWithAuth('/api/notifications');
@@ -2282,7 +2509,11 @@
     async function deleteNotif(id) {
       if( !confirm('Delete this notification?')) return;
 
-      await fetchWithAuth(`/api/notifications/${id}`, {
+      await fetchWithAuth(`/api/notifications/$ {
+          id
+        }
+
+        `, {
         method:'DELETE'
       });
     const r=await fetchWithAuth('/api/notifications');
@@ -2346,7 +2577,7 @@
 
     function startNotifPolling() {
       if(NOTIF_POLL_INTERVAL) clearInterval(NOTIF_POLL_INTERVAL);
-      NOTIF_POLL_INTERVAL=setInterval(() => { updateNotifBadge(); refreshNotifications(); }, 30000);
+      NOTIF_POLL_INTERVAL=setInterval(updateNotifBadge, 30000);
     }
 
     // ============ DASHBOARD CARD INTERACTIONS ============
@@ -2456,7 +2687,7 @@
         , 500);
     }
 
-    // ============ AUTO INIT ============
+    ============ AUTO INIT ============
     if(TOKEN) {
       (async()=> {
           try {

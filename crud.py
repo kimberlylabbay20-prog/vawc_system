@@ -176,11 +176,12 @@ def get_case_activities(db: Session, case_id: int):
 
 # ========== NOTIFICATIONS ==========
 
-def create_notification(db: Session, case_id: int, message: str, recipient_role: str):
+def create_notification(db: Session, case_id: int, message: str, recipient_role: str, notification_type: str = None):
     notif = models.Notification(
         case_id=case_id,
         message=message,
-        recipient_role=recipient_role
+        recipient_role=recipient_role,
+        type=notification_type
     )
     db.add(notif)
     db.commit()
@@ -213,6 +214,15 @@ def mark_all_notifications_read(db: Session, role: str = None):
     if role:
         query = query.filter(models.Notification.recipient_role.in_([role, "all"]))
     query.update({models.Notification.is_read: True})
+    db.commit()
+
+def mark_notifications_read_by_type(db: Session, notification_type: str):
+    notifs = db.query(models.Notification).filter(
+        models.Notification.type == notification_type,
+        models.Notification.is_read == False
+    ).all()
+    for notif in notifs:
+        notif.is_read = True
     db.commit()
 
 def archive_notification(db: Session, notif_id: int):

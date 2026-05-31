@@ -103,6 +103,7 @@ class Notification(Base):
     is_read = Column(Boolean, default=False)
     is_archived = Column(Boolean, default=False)
     is_deleted = Column(Boolean, default=False)
+    type = Column(String(50), nullable=True, default=None)
     created_at = Column(TIMESTAMP, server_default=func.now())
 
     case = relationship("Report", back_populates="notifications", foreign_keys=[case_id])

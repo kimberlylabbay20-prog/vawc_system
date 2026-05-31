@@ -140,6 +140,7 @@ class NotificationResponse(BaseModel):
     is_read: bool
     is_archived: bool = False
     is_deleted: bool = False
+    type: Optional[str] = None
     created_at: Optional[datetime] = None
     model_config = {"from_attributes": True}
 

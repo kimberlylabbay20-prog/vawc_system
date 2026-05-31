@@ -268,7 +268,7 @@ def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
             from database import SessionLocal
             notif_db = SessionLocal()
             try:
-                crud.create_notification(notif_db, None, "New officer registration request", "admin")
+                crud.create_notification(notif_db, None, f"Officer {user.full_name} is awaiting approval.", "admin", "officer_registration")
             finally:
                 notif_db.close()
             send_officer_registration_email(
@@ -821,6 +821,7 @@ def approve_user(
     user.is_active = True
     db.commit()
     db.refresh(user)
+    crud.mark_notifications_read_by_type(db, "officer_registration")
     logger.info("Officer approved: %s", user.username)
     return {"message": "Officer approved", "user_id": user_id, "username": user.username}
 
@@ -837,6 +838,7 @@ def reject_user(
     user.is_active = False
     db.commit()
     db.refresh(user)
+    crud.mark_notifications_read_by_type(db, "officer_registration")
     logger.info("Officer rejected: %s", user.username)
     return {"message": "Officer rejected", "user_id": user_id, "username": user.username}
 

@@ -82,6 +82,60 @@ def on_startup():
         except Exception as e:
             logger.warning("Case migration check skipped: %s", e)
 
+        # =====================================================================
+        # ADMIN BOOTSTRAP
+        # =====================================================================
+        # If no admin account exists in the database, create a default one.
+        # This ensures at least one admin can always log in to manage the system.
+        #
+        # Default credentials:
+        #   Username: admin
+        #   Email:    admin@barangayvawc.gov.ph
+        #   Password: Admin@12345
+        #
+        # To change the admin password after login:
+        #   - Log in with the default credentials
+        #   - Navigate to the Users tab in the dashboard
+        #   - Update the password from the user profile
+        #
+        # To create additional admin accounts safely:
+        #   1. Set the ADMIN_SECRET_KEY environment variable on the server
+        #   2. POST /api/register with role="admin" and admin_secret="<value>"
+        # =====================================================================
+        try:
+            admin_db = SessionLocal()
+            try:
+                admin_exists = admin_db.query(models.User).filter(
+                    models.User.role == "admin"
+                ).first()
+                if admin_exists:
+                    logger.info("Admin account exists — bootstrap skipped")
+                else:
+                    logger.warning("No admin account detected. Creating default admin.")
+
+                    admin_user = models.User(
+                        username="admin",
+                        email="admin@barangayvawc.gov.ph",
+                        password_hash=_bcrypt.hashpw(
+                            "Admin@12345".encode("utf-8"), _bcrypt.gensalt()
+                        ).decode("utf-8"),
+                        full_name="System Admin",
+                        role="admin",
+                        barangay=None,
+                        contact_number=None,
+                        account_status="approved",
+                        is_active=True,
+                    )
+                    admin_db.add(admin_user)
+                    admin_db.commit()
+                    logger.info("Default admin created successfully")
+            except Exception as bootstrap_e:
+                logger.warning("Admin bootstrap skipped: %s", bootstrap_e)
+            finally:
+                admin_db.close()
+        except Exception as e:
+            logger.warning("Admin bootstrap connection failed: %s", e)
+
     except Exception as e:
         logger.error("Database startup failed: %s", e)
 

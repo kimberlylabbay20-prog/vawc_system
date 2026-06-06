@@ -5,8 +5,8 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
-import shutil
 import os
+from storage import upload_file, delete_file
 from datetime import datetime, timedelta
 from jose import jwt, JWTError
 import bcrypt as _bcrypt
@@ -151,6 +151,7 @@ app.add_middleware(
 os.makedirs("static", exist_ok=True)
 os.makedirs("uploads", exist_ok=True)
 app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 # ---------- Templates ----------
 templates = Jinja2Templates(directory=os.path.join(os.path.dirname(__file__), "templates"))
@@ -244,9 +245,7 @@ def submit_report(
 ):
     file_path = None
     if file:
-        file_path = f"uploads/{file.filename}"
-        with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
+        file_path = upload_file(file)
 
     new_report = crud.create_report_with_file(
         db, victim_name, contact_number, incident_type, description, location, file_path
@@ -730,9 +729,7 @@ def upload_evidence(
     if not case:
         raise HTTPException(status_code=404, detail="Case not found")
     filename = file.filename or "unnamed"
-    file_path = f"uploads/evidence_{case_id}_{filename}"
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+    file_path = upload_file(file, prefix=f"uploads/evidence_{case_id}")
     file_type = filename.rsplit(".", 1)[-1].lower() if "." in filename else None
     ev = crud.create_evidence(db, case_id, filename, file_path, file_type, current_user.id)
     return ev
@@ -753,8 +750,7 @@ def delete_evidence(
     ev = crud.delete_evidence(db, evidence_id)
     if not ev:
         raise HTTPException(status_code=404, detail="Evidence not found")
-    if os.path.exists(ev.file_path):
-        os.remove(ev.file_path)
+    delete_file(ev.file_path)
     return {"message": "Evidence deleted"}
 
 

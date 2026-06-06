@@ -1898,7 +1898,7 @@
 
         </div></div><div class="detail-row"><div class="detail-label">Description</div><div class="detail-value">${c.description}
 
-        </div></div>${c.file_path?`<div class="detail-row"><div class="detail-label">Evidence</div><div class="detail-value"><a href="/${c.file_path}" target="_blank" style="color:var(--accent)"><i class="fas fa-paperclip"></i>View file</a></div></div>`: ''}
+        </div></div>${c.file_path?`<div class="detail-row"><div class="detail-label">Evidence</div><div class="detail-value">${function(){var fp=c.file_path;var href=fp.startsWith('http')?fp:'/'+fp;var isImg=fp.match(/\.(jpg|jpeg|png|gif|webp)(\?|#|$)/i);if(isImg){return '<a href="'+href+'" target="_blank"><img src="'+href+'" style="max-width:120px;max-height:80px;border-radius:6px;object-fit:cover;vertical-align:middle;margin-right:8px;border:1px solid var(--border);cursor:pointer" onerror="this.style.display=\'none\'"><span style="color:var(--accent);font-size:13px">Open image</span></a>'}return '<a href="'+href+'" target="_blank" style="color:var(--accent)"><i class="fas fa-paperclip"></i>View file</a>'}()}</div></div>`: ''}
 
         </div>${c.case_notes?`<div class="detail-card"><h3><i class="fas fa-sticky-note" style="color:var(--warning)"></i>Case Notes</h3><pre style="white-space:pre-wrap;font-family:inherit;font-size:14px;line-height:1.6">${ c.case_notes } </pre></div>`:''}
 

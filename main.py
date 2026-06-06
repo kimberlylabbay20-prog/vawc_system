@@ -82,6 +82,18 @@ def on_startup():
         except Exception as e:
             logger.warning("Case migration check skipped: %s", e)
 
+        # Blob storage diagnostics
+        _blob_token = os.environ.get("BLOB_READ_WRITE_TOKEN")
+        _blob_store = os.environ.get("BLOB_STORE_ID")
+        if _blob_token:
+            logger.info("Blob diagnostics: BLOB_READ_WRITE_TOKEN is set")
+        else:
+            logger.warning("Blob diagnostics: BLOB_READ_WRITE_TOKEN is not set — file uploads will use local filesystem")
+        if _blob_store:
+            logger.info("Blob diagnostics: BLOB_STORE_ID is set")
+        else:
+            logger.info("Blob diagnostics: BLOB_STORE_ID is not set (optional)")
+
         # =====================================================================
         # ADMIN BOOTSTRAP
         # =====================================================================

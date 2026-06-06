@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">BVAWC</string>
+    <string name="app_full_name">Barangay Violence Against Women and Children</string>
+    <string name="app_tagline">Safe • Confidential • Accessible</string>
+    <string name="splash_subtitle">Barangay Violence Against Women and Children</string>
+    <string name="loading">Loading…</string>
+    <string name="error_no_internet">No internet connection. Please check your connection and try again.</string>
+    <string name="error_page_load">Failed to load page. Please try again.</string>
+    <string name="dashboard_redirect">Redirecting to public portal…</string>
+</resources>

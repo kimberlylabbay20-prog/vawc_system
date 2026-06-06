@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Shield -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,14L88,30L88,62C88,84 72,98 54,106C36,98 20,84 20,62L20,30Z" />
+    <!-- Woman head -->
+    <circle
+        android:fillColor="#FFFFFF"
+        android:cx="54"
+        android:cy="44"
+        android:r="10" />
+    <!-- Woman body -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M40,82C40,66 44,58 54,58C64,58 68,66 68,82" />
+    <!-- Child head -->
+    <circle
+        android:fillColor="#FFFFFF"
+        android:cx="72"
+        android:cy="50"
+        android:r="7" />
+    <!-- Child body -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M64,78C64,68 66,62 72,62C78,62 80,68 80,78" />
+    <!-- Protection arc -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2.5"
+        android:fillColor="#00000000"
+        android:strokeLineCap="round"
+        android:pathData="M32,30C40,24 47,22 54,22C61,22 68,24 76,30" />
+</vector>

@@ -41,6 +41,7 @@ def upload_file(file: UploadFile, prefix: str = "uploads") -> str:
     safe_name = _safe_filename(file.filename)
 
     if BLOB_TOKEN:
+        logger.info("upload_file: using Vercel Blob storage")
         try:
             from vercel.blob import put as blob_put
             blob_path = f"{prefix}/{safe_name}"
@@ -54,10 +55,14 @@ def upload_file(file: UploadFile, prefix: str = "uploads") -> str:
             return result.url
         except HTTPException:
             raise
+        except ImportError as exc:
+            logger.error("Blob upload failed — SDK import error: %s", exc)
+            raise HTTPException(status_code=500, detail="File upload to storage failed")
         except Exception as exc:
             logger.error("Blob upload failed: %s: %s", type(exc).__name__, exc)
             raise HTTPException(status_code=500, detail="File upload to storage failed")
 
+    logger.info("Blob upload unavailable, using local fallback — BLOB_READ_WRITE_TOKEN not set")
     local_dir = os.path.join(os.getcwd(), prefix)
     os.makedirs(local_dir, exist_ok=True)
     local_path = os.path.join(local_dir, safe_name)

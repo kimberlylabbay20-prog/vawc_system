@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp"
+    android:height="120dp"
+    android:viewportWidth="120"
+    android:viewportHeight="120">
+    <!-- Shield outer -->
+    <path
+        android:fillColor="#B0006D"
+        android:pathData="M60,10L100,30L100,66C100,92 80,108 60,118C40,108 20,92 20,66L20,30Z" />
+    <!-- Shield inner highlight -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:alpha="0.12"
+        android:pathData="M60,20L88,36L88,64C88,86 72,100 60,108C48,100 32,86 32,64L32,36Z" />
+    <!-- Woman head -->
+    <circle
+        android:fillColor="#FFFFFF"
+        android:cx="60"
+        android:cy="48"
+        android:r="12" />
+    <!-- Woman body -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M44,90C44,72 48,62 60,62C72,62 76,72 76,90" />
+    <!-- Child head (smaller, next to woman) -->
+    <circle
+        android:fillColor="#FFFFFF"
+        android:cx="80"
+        android:cy="54"
+        android:r="8" />
+    <!-- Child body -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M70,84C70,74 72,68 80,68C88,68 90,74 90,84" />
+    <!-- Protection arc -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="3"
+        android:fillColor="#00000000"
+        android:strokeLineCap="round"
+        android:pathData="M34,32C42,24 51,22 60,22C69,22 78,24 86,32" />
+    <!-- Helping hands -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="3.5"
+        android:fillColor="#00000000"
+        android:strokeLineCap="round"
+        android:pathData="M18,62C24,58 30,60 36,68" />
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="3.5"
+        android:fillColor="#00000000"
+        android:strokeLineCap="round"
+        android:pathData="M102,62C96,58 90,60 84,68" />
+</vector>
